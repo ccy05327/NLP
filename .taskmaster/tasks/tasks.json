@@ -1,0 +1,223 @@
+{
+  "master": {
+    "tasks": [
+      {
+        "id": 1,
+        "title": "EPIC 1: Report Scoping & Introduction",
+        "description": "Lay the foundational research and writing for the report's introduction, reframing the project's goals and situating it within current academic literature.",
+        "priority": "high",
+        "dependencies": [],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 101,
+            "title": "Conduct Literature Research with Gemini",
+            "description": "Use Gemini's Deep Research mode to find relevant academic papers for the literature review.",
+            "details": "Use the precise query: 'comparative analysis of transformer vs statistical models for text emotion detection since 2020'. Goal is to find two highly relevant papers.",
+            "status": "done",
+            "dependencies": []
+          },
+          {
+            "id": 102,
+            "title": "Analyse and Summarise Research Papers with Gemini",
+            "description": "Select the two best papers from the research and use Gemini to extract key information.",
+            "details": "For each of the two selected papers, prompt Gemini: 'Summarise this paper's methodology, dataset, and key findings regarding the performance comparison.' Save these summaries.",
+            "status": "done",
+            "dependencies": [
+              101
+            ]
+          },
+          {
+            "id": 103,
+            "title": "Draft Comparative Introduction with Gemini",
+            "description": "Use Gemini to rewrite the introduction from the existing 'Draft 2.pdf' to fit the new comparative focus.",
+            "details": "Prompt Gemini with: 'Rewrite this introduction [paste original introduction]. Frame the project as a comparative study between a classical model and a transformer model. Integrate the following two summaries [paste summaries from subtask 102]. Ensure the tone is academic, in British English, and appropriate for a university-level assignment.'",
+            "status": "in-progress",
+            "dependencies": [
+              102
+            ]
+          },
+          {
+            "id": 104,
+            "title": "Rewrite Project Objectives with Gemini",
+            "description": "Use Gemini to adapt the project objectives to align perfectly with the 2025 coursework brief.",
+            "details": "Prompt Gemini with: 'Based on the 2025 coursework brief, rewrite these objectives [paste original objectives]. The primary goal is to compare Logistic Regression with DistilBERT. Specific objectives must include analysing performance, computational cost, and interpretability.'",
+            "status": "pending",
+            "dependencies": [
+              103
+            ]
+          }
+        ]
+      },
+      {
+        "id": 2,
+        "title": "EPIC 2: Code Implementation & Model Development",
+        "description": "Develop the complete Jupyter Notebook using Cursor for all coding tasks, including data pipelines, training, and evaluation.",
+        "priority": "critical",
+        "dependencies": [],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 201,
+            "title": "Setup Notebook & Statistical Model Pipeline with Cursor",
+            "description": "Create the notebook and implement the full pipeline for the baseline and statistical models by porting existing code.",
+            "details": "Create `CM3060_Coursework.ipynb`. Use Cursor to port the code from 'Draft 2.pdf' for: 1. Loading the `dair-ai/emotion` dataset. 2. TF-IDF vectorization. 3. Training and evaluating the Naïve Bayes and Logistic Regression models. Run and confirm results.",
+            "status": "pending",
+            "dependencies": []
+          },
+          {
+            "id": 202,
+            "title": "Generate Transformer Pre-processing Function with Cursor",
+            "description": "Create the specific data pre-processing pipeline required for the DistilBERT model.",
+            "details": "In Cursor chat, use the prompt: 'Generate a Python function `preprocess_for_transformer` that takes a batch from the Hugging Face emotion dataset and uses a `DistilBertTokenizer.from_pretrained('distilbert-base-uncased')` to create `input_ids` and `attention_mask`.'",
+            "status": "pending",
+            "dependencies": [
+              201
+            ]
+          },
+          {
+            "id": 203,
+            "title": "Apply Transformer Pre-processing",
+            "description": "Use the generated function to prepare the dataset for the transformer.",
+            "details": "Apply the `preprocess_for_transformer` function to the entire dataset using the `.map(..., batched=True)` method. Create tokenized train, validation, and test sets.",
+            "status": "pending",
+            "dependencies": [
+              202
+            ]
+          },
+          {
+            "id": 204,
+            "title": "Generate Transformer Training Code with Cursor",
+            "description": "Use Cursor to generate the boilerplate code for setting up and running the Hugging Face Trainer.",
+            "details": "In Cursor chat, use the prompt: 'Generate the Python code to set up the Hugging Face `Trainer` API. Use `AutoModelForSequenceClassification.from_pretrained('distilbert-base-uncased', num_labels=6)`. Define `TrainingArguments` for an output directory named 'results', with a `per_device_train_batch_size` of 16, 3 `num_train_epochs`, and `evaluation_strategy=\"epoch\"`.'",
+            "status": "pending",
+            "dependencies": [
+              203
+            ]
+          },
+          {
+            "id": 205,
+            "title": "Train the DistilBERT Model",
+            "description": "Instantiate the Trainer and run the fine-tuning process.",
+            "details": "Instantiate the `Trainer` with the model, arguments, and tokenized datasets. Call `trainer.train()`. This may take some time.",
+            "status": "pending",
+            "dependencies": [
+              204
+            ]
+          },
+          {
+            "id": 206,
+            "title": "Evaluate All Models and Store Results",
+            "description": "Run final evaluations and collect all performance metrics in a structured way for easy access.",
+            "details": "Run `trainer.evaluate()` on the test set. Create a single Python dictionary named `performance_metrics` to store the accuracy, macro F1, and weighted F1 for all three models (Naïve Bayes, Logistic Regression, DistilBERT).",
+            "status": "pending",
+            "dependencies": [
+              205
+            ]
+          }
+        ]
+      },
+      {
+        "id": 3,
+        "title": "EPIC 3: Comparative Analysis & Report Writing",
+        "description": "Analyse model results, generate visualisations, and write the core analytical sections of the report using the designated AI assistants.",
+        "priority": "high",
+        "dependencies": [
+          2
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 301,
+            "title": "Generate Comparative Visualisations with Cursor",
+            "description": "Create plots to visually compare the performance of the models.",
+            "details": "Using the `performance_metrics` dictionary, prompt Cursor to generate the `matplotlib`/`seaborn` code for: 1. A bar chart comparing the Macro F1-scores of the three models. 2. Two confusion matrices (for Logistic Regression and DistilBERT) plotted side-by-side using `plt.subplot()` for direct comparison.",
+            "status": "pending",
+            "dependencies": [
+              206
+            ]
+          },
+          {
+            "id": 302,
+            "title": "Draft Performance Analysis Section with Gemini",
+            "description": "Use Gemini to write the main analytical part of the report based on the results.",
+            "details": "Prompt Gemini with: 'Write the \"Performance Analysis & Comparative Discussion\" section. Here are the results [paste the `performance_metrics` dictionary]. First, compare the models quantitatively using the bar chart. Second, analyse the two confusion matrices qualitatively. Point out where DistilBERT made fewer errors on minority classes like 'love' and 'surprise', and explain that this is likely due to its understanding of semantic context. Use a professional, university-level tone.'",
+            "status": "pending",
+            "dependencies": [
+              301
+            ]
+          },
+          {
+            "id": 303,
+            "title": "Draft Conclusion & Reflections with Gemini",
+            "description": "Use Gemini to write the final reflective conclusion of the report.",
+            "details": "Prompt Gemini with: 'Write the \"Project Summary and Reflections\" section. Summarise the key finding that transformers provide higher accuracy at a greater computational cost. Reflect on the practical trade-offs (e.g., when Logistic Regression's efficiency might be preferred). Reuse and update the 'future work' ideas from the original draft.'",
+            "status": "pending",
+            "dependencies": [
+              302
+            ]
+          }
+        ]
+      },
+      {
+        "id": 4,
+        "title": "EPIC 4: Finalisation & Submission",
+        "description": "Perform final quality checks on both the code and the report, and prepare the files for submission.",
+        "priority": "medium",
+        "dependencies": [
+          1,
+          2,
+          3
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 401,
+            "title": "Clean and Comment Jupyter Notebook with Cursor",
+            "description": "Ensure the final notebook is professional, reproducible, and easy to understand.",
+            "details": "Go through the entire notebook. Use Cursor's refactoring and commenting features to clean up code and add clear explanations for each major step (Data Loading, Pre-processing, Model Training, etc.). Restart the kernel and run all cells to ensure it works flawlessly.",
+            "status": "pending",
+            "dependencies": [
+              303
+            ]
+          },
+          {
+            "id": 402,
+            "title": "Assemble and Proofread Final Report with Gemini",
+            "description": "Combine all written parts into a single document and perform a thorough proofread.",
+            "details": "Copy all written content into a single document. Prompt Gemini: 'Please proofread the following academic report for clarity, consistency, flow, and grammatical errors. Ensure it maintains a professional tone and adheres to British English conventions.'",
+            "status": "pending",
+            "dependencies": [
+              401
+            ]
+          },
+          {
+            "id": 403,
+            "title": "Final Rubric Check",
+            "description": "Perform a final manual check against the official coursework rubric to ensure all requirements are met.",
+            "details": "Open the 'NLP Midterm 2025.pdf' file. Read each item on the rubric and cross-reference it with your final report and code. Ensure you have explicitly addressed every point required for a high grade.",
+            "status": "pending",
+            "dependencies": [
+              402
+            ]
+          },
+          {
+            "id": 404,
+            "title": "Prepare Submission Package",
+            "description": "Create the final files for upload.",
+            "details": "Export the final report document to PDF. Create a zip archive containing two files: `CM3060_Report.pdf` and `CM3060_Coursework.ipynb`.",
+            "status": "pending",
+            "dependencies": [
+              403
+            ]
+          }
+        ]
+      }
+    ],
+    "metadata": {
+      "created": "2025-06-21T18:51:35.689Z",
+      "updated": "2025-06-21T18:51:59.069Z",
+      "description": "Tasks for master context"
+    }
+  }
+}
