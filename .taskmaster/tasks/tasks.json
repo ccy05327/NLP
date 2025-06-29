@@ -7,7 +7,7 @@
         "description": "Lay the foundational research and writing for the report's introduction, reframing the project's goals and situating it within current academic literature.",
         "priority": "high",
         "dependencies": [],
-        "status": "pending",
+        "status": "done",
         "subtasks": [
           {
             "id": 101,
@@ -32,7 +32,7 @@
             "title": "Draft Comparative Introduction with Gemini",
             "description": "Use Gemini to rewrite the introduction from the existing 'Draft 2.pdf' to fit the new comparative focus.",
             "details": "Prompt Gemini with: 'Rewrite this introduction [paste original introduction]. Frame the project as a comparative study between a classical model and a transformer model. Integrate the following two summaries [paste summaries from subtask 102]. Ensure the tone is academic, in British English, and appropriate for a university-level assignment.'",
-            "status": "in-progress",
+            "status": "done",
             "dependencies": [
               102
             ]
@@ -42,7 +42,7 @@
             "title": "Rewrite Project Objectives with Gemini",
             "description": "Use Gemini to adapt the project objectives to align perfectly with the 2025 coursework brief.",
             "details": "Prompt Gemini with: 'Based on the 2025 coursework brief, rewrite these objectives [paste original objectives]. The primary goal is to compare Logistic Regression with DistilBERT. Specific objectives must include analysing performance, computational cost, and interpretability.'",
-            "status": "pending",
+            "status": "done",
             "dependencies": [
               103
             ]
@@ -55,14 +55,14 @@
         "description": "Develop the complete Jupyter Notebook using Cursor for all coding tasks, including data pipelines, training, and evaluation.",
         "priority": "critical",
         "dependencies": [],
-        "status": "pending",
+        "status": "done",
         "subtasks": [
           {
             "id": 201,
             "title": "Setup Notebook & Statistical Model Pipeline with Cursor",
             "description": "Create the notebook and implement the full pipeline for the baseline and statistical models by porting existing code.",
             "details": "Create `CM3060_Coursework.ipynb`. Use Cursor to port the code from 'Draft 2.pdf' for: 1. Loading the `dair-ai/emotion` dataset. 2. TF-IDF vectorization. 3. Training and evaluating the Naïve Bayes and Logistic Regression models. Run and confirm results.",
-            "status": "pending",
+            "status": "done",
             "dependencies": []
           },
           {
@@ -70,7 +70,7 @@
             "title": "Generate Transformer Pre-processing Function with Cursor",
             "description": "Create the specific data pre-processing pipeline required for the DistilBERT model.",
             "details": "In Cursor chat, use the prompt: 'Generate a Python function `preprocess_for_transformer` that takes a batch from the Hugging Face emotion dataset and uses a `DistilBertTokenizer.from_pretrained('distilbert-base-uncased')` to create `input_ids` and `attention_mask`.'",
-            "status": "pending",
+            "status": "done",
             "dependencies": [
               201
             ]
@@ -80,7 +80,7 @@
             "title": "Apply Transformer Pre-processing",
             "description": "Use the generated function to prepare the dataset for the transformer.",
             "details": "Apply the `preprocess_for_transformer` function to the entire dataset using the `.map(..., batched=True)` method. Create tokenized train, validation, and test sets.",
-            "status": "pending",
+            "status": "done",
             "dependencies": [
               202
             ]
@@ -90,7 +90,7 @@
             "title": "Generate Transformer Training Code with Cursor",
             "description": "Use Cursor to generate the boilerplate code for setting up and running the Hugging Face Trainer.",
             "details": "In Cursor chat, use the prompt: 'Generate the Python code to set up the Hugging Face `Trainer` API. Use `AutoModelForSequenceClassification.from_pretrained('distilbert-base-uncased', num_labels=6)`. Define `TrainingArguments` for an output directory named 'results', with a `per_device_train_batch_size` of 16, 3 `num_train_epochs`, and `evaluation_strategy=\"epoch\"`.'",
-            "status": "pending",
+            "status": "done",
             "dependencies": [
               203
             ]
@@ -100,7 +100,7 @@
             "title": "Train the DistilBERT Model",
             "description": "Instantiate the Trainer and run the fine-tuning process.",
             "details": "Instantiate the `Trainer` with the model, arguments, and tokenized datasets. Call `trainer.train()`. This may take some time.",
-            "status": "pending",
+            "status": "done",
             "dependencies": [
               204
             ]
@@ -110,7 +110,7 @@
             "title": "Evaluate All Models and Store Results",
             "description": "Run final evaluations and collect all performance metrics in a structured way for easy access.",
             "details": "Run `trainer.evaluate()` on the test set. Create a single Python dictionary named `performance_metrics` to store the accuracy, macro F1, and weighted F1 for all three models (Naïve Bayes, Logistic Regression, DistilBERT).",
-            "status": "pending",
+            "status": "done",
             "dependencies": [
               205
             ]
@@ -216,7 +216,7 @@
     ],
     "metadata": {
       "created": "2025-06-21T18:51:35.689Z",
-      "updated": "2025-06-21T18:51:59.069Z",
+      "updated": "2025-06-29T12:39:08.063Z",
       "description": "Tasks for master context"
     }
   }
