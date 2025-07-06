@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Topics 1-5: Foundations of NLP</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      body {
+        font-family: "Inter", sans-serif;
+        background-color: #f8fafc; /* slate-50 */
+        color: #1e293b; /* slate-800 */
+      }
+      @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Source+Code+Pro:wght@400;600&display=swap");
+      .font-code {
+        font-family: "Source Code Pro", monospace;
+      }
+      .key-term {
+        color: #0369a1; /* sky-700 */
+        cursor: pointer;
+        font-weight: 600;
+        border-bottom: 2px dotted #7dd3fc; /* sky-300 */
+        position: relative;
+      }
+      #tooltip {
+        position: absolute;
+        background-color: #1e293b; /* slate-800 */
+        color: white;
+        padding: 10px 15px;
+        border-radius: 8px;
+        z-index: 10;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        max-width: 300px;
+        font-size: 0.875rem;
+        line-height: 1.5;
+        display: none;
+      }
+      .topic-card {
+        transition: all 0.3s ease;
+      }
+      .topic-card:hover {
+        transform: translateY(-2px);
+      }
+    </style>
+  </head>
+  <body class="bg-slate-50 text-slate-800">
+    <div id="tooltip"></div>
+
+    <header class="bg-white shadow-sm">
+      <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <h1 class="text-4xl font-bold text-slate-900">
+          Topics 1-5: Foundations of NLP
+        </h1>
+        <p class="mt-2 text-lg text-slate-600">
+          An introduction to the fundamental concepts of natural language
+          processing.
+        </p>
+      </div>
+    </header>
+
+    <main class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
+      <section id="objectives" class="mb-12 p-6 bg-white rounded-lg shadow">
+        <h2 class="text-2xl font-bold text-slate-900 mb-4">
+          Learning Objectives
+        </h2>
+        <p class="mb-4 text-slate-600">
+          By the end of these foundational modules, you will understand the core
+          concepts that underpin all modern NLP systems.
+        </p>
+        <ul class="list-disc list-inside space-y-2 text-slate-700">
+          <li>
+            Understand the history and scope of natural language processing
+          </li>
+          <li>Learn about text preprocessing and tokenization techniques</li>
+          <li>Explore language modeling and n-gram approaches</li>
+          <li>Apply basic statistical methods to text analysis</li>
+          <li>Understand evaluation methods for NLP systems</li>
+        </ul>
+      </section>
+
+      <section id="topic-overview" class="mb-12">
+        <h2 class="text-3xl font-bold text-slate-900 mb-6">Topic Overview</h2>
+
+        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div
+            class="topic-card p-6 bg-white rounded-lg shadow hover:shadow-lg border border-slate-200"
+          >
+            <h3 class="text-xl font-semibold text-slate-900 mb-3">
+              Topic 1: Introduction to NLP
+            </h3>
+            <p class="text-slate-600 text-sm">
+              Overview of natural language processing, its applications, and the
+              challenges of working with human language.
+            </p>
+          </div>
+
+          <div
+            class="topic-card p-6 bg-white rounded-lg shadow hover:shadow-lg border border-slate-200"
+          >
+            <h3 class="text-xl font-semibold text-slate-900 mb-3">
+              Topic 2: Text Preprocessing
+            </h3>
+            <p class="text-slate-600 text-sm">
+              Tokenization, normalization, stemming, lemmatization, and other
+              essential text preparation techniques.
+            </p>
+          </div>
+
+          <div
+            class="topic-card p-6 bg-white rounded-lg shadow hover:shadow-lg border border-slate-200"
+          >
+            <h3 class="text-xl font-semibold text-slate-900 mb-3">
+              Topic 3: Language Models
+            </h3>
+            <p class="text-slate-600 text-sm">
+              N-gram models, probability estimation, smoothing techniques, and
+              the foundations of statistical language modeling.
+            </p>
+          </div>
+
+          <div
+            class="topic-card p-6 bg-white rounded-lg shadow hover:shadow-lg border border-slate-200"
+          >
+            <h3 class="text-xl font-semibold text-slate-900 mb-3">
+              Topic 4: Text Classification
+            </h3>
+            <p class="text-slate-600 text-sm">
+              Naive Bayes, feature extraction, document classification, and
+              sentiment analysis fundamentals.
+            </p>
+          </div>
+
+          <div
+            class="topic-card p-6 bg-white rounded-lg shadow hover:shadow-lg border border-slate-200"
+          >
+            <h3 class="text-xl font-semibold text-slate-900 mb-3">
+              Topic 5: Evaluation & Metrics
+            </h3>
+            <p class="text-slate-600 text-sm">
+              Precision, recall, F1-score, cross-validation, and other methods
+              for evaluating NLP system performance.
+            </p>
+          </div>
+
+          <div
+            class="topic-card p-6 bg-white rounded-lg shadow hover:shadow-lg border border-slate-200"
+          >
+            <h3 class="text-xl font-semibold text-slate-900 mb-3">
+              Practical Applications
+            </h3>
+            <p class="text-slate-600 text-sm">
+              Hands-on exercises and real-world examples demonstrating the
+              application of foundational NLP concepts.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section
+        id="content-placeholder"
+        class="mb-12 p-6 bg-white rounded-lg shadow"
+      >
+        <h2 class="text-2xl font-bold text-slate-900 mb-4">
+          Interactive Content Coming Soon
+        </h2>
+        <p class="text-slate-600 text-center py-8">
+          This section will contain interactive demonstrations and exercises for
+          Topics 1-5: Foundations of NLP.
+        </p>
+      </section>
+
+      <footer id="resources" class="bg-white p-6 rounded-lg shadow">
+        <h2 class="text-2xl font-bold text-slate-900 mb-4">Further Readings</h2>
+        <p class="mb-4 text-slate-600">
+          For a deeper dive into these foundational topics, please refer to the
+          following resources:
+        </p>
+        <ul class="list-disc list-inside space-y-2">
+          <li>
+            <a
+              href="topic 1 reading 2.pdf"
+              target="_blank"
+              class="text-sky-600 hover:underline"
+            >
+              Topic 1 Reading 2: Introduction to NLP
+            </a>
+          </li>
+          <li>
+            <a
+              href="topic 1 reading 3.pdf"
+              target="_blank"
+              class="text-sky-600 hover:underline"
+            >
+              Topic 1 Reading 3: Language Processing Fundamentals
+            </a>
+          </li>
+          <li>
+            <a
+              href="topic 2 reading 3.pdf"
+              target="_blank"
+              class="text-sky-600 hover:underline"
+            >
+              Topic 2 Reading 3: Text Preprocessing Techniques
+            </a>
+          </li>
+          <li>
+            <a
+              href="topic 2 reading 4.pdf"
+              target="_blank"
+              class="text-sky-600 hover:underline"
+            >
+              Topic 2 Reading 4: Tokenization and Normalization
+            </a>
+          </li>
+          <li>
+            <a
+              href="topic 2 reading 5.pdf"
+              target="_blank"
+              class="text-sky-600 hover:underline"
+            >
+              Topic 2 Reading 5: Advanced Text Processing
+            </a>
+          </li>
+          <li>
+            <a
+              href="topic 3 reading 1.pdf"
+              target="_blank"
+              class="text-sky-600 hover:underline"
+            >
+              Topic 3 Reading 1: Language Models and N-grams
+            </a>
+          </li>
+          <li>
+            <a
+              href="topic 3 reading 2.pdf"
+              target="_blank"
+              class="text-sky-600 hover:underline"
+            >
+              Topic 3 Reading 2: Statistical Language Modeling
+            </a>
+          </li>
+          <li>
+            <a
+              href="topic 4 reading 1.pdf"
+              target="_blank"
+              class="text-sky-600 hover:underline"
+            >
+              Topic 4 Reading 1: Text Classification Methods
+            </a>
+          </li>
+          <li>
+            <a
+              href="topic 5 reading 1.pdf"
+              target="_blank"
+              class="text-sky-600 hover:underline"
+            >
+              Topic 5 Reading 1: Evaluation Metrics for NLP
+            </a>
+          </li>
+        </ul>
+      </footer>
+    </main>
+
+    <script>
+      document.addEventListener("DOMContentLoaded", () => {
+        // --- Tooltip for Key Terms ---
+        const tooltip = document.getElementById("tooltip");
+        document.querySelectorAll(".key-term").forEach((term) => {
+          term.addEventListener("mouseenter", (e) => {
+            tooltip.textContent = e.target.dataset.def;
+            tooltip.style.display = "block";
+            const rect = e.target.getBoundingClientRect();
+            tooltip.style.left = `${rect.left}px`;
+            tooltip.style.top = `${rect.bottom + 5 + window.scrollY}px`;
+          });
+          term.addEventListener("mouseleave", () => {
+            tooltip.style.display = "none";
+          });
+        });
+      });
+    </script>
+  </body>
+</html>

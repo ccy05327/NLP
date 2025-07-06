@@ -69,6 +69,84 @@
         </ul>
       </section>
 
+      <section id="audio-lecture" class="mb-12 p-6 bg-white rounded-lg shadow">
+        <h2 class="text-2xl font-bold text-slate-900 mb-4">Audio Lecture</h2>
+        <p class="mb-6 text-slate-600">
+          Listen to the detailed explanation of advanced NLP applications. Use
+          the speed controls to adjust playback to your preference.
+        </p>
+
+        <div class="bg-slate-50 p-6 rounded-lg border border-slate-200">
+          <div class="flex items-center justify-center mb-4">
+            <audio
+              id="topic-audio"
+              controls
+              class="w-full max-w-md"
+              preload="metadata"
+            >
+              <source src="topic 10.wav" type="audio/wav" />
+              Your browser does not support the audio element.
+            </audio>
+          </div>
+
+          <div class="flex items-center justify-center space-x-4">
+            <span class="text-sm font-medium text-slate-700"
+              >Playback Speed:</span
+            >
+            <div class="flex space-x-2">
+              <button
+                id="speed-0-5"
+                class="speed-btn px-3 py-1 text-sm bg-slate-200 text-slate-700 rounded hover:bg-slate-300 transition-colors"
+                data-speed="0.5"
+              >
+                0.5x
+              </button>
+              <button
+                id="speed-0-75"
+                class="speed-btn px-3 py-1 text-sm bg-slate-200 text-slate-700 rounded hover:bg-slate-300 transition-colors"
+                data-speed="0.75"
+              >
+                0.75x
+              </button>
+              <button
+                id="speed-1"
+                class="speed-btn px-3 py-1 text-sm bg-sky-600 text-white rounded hover:bg-sky-700 transition-colors active"
+                data-speed="1"
+              >
+                1x
+              </button>
+              <button
+                id="speed-1-25"
+                class="speed-btn px-3 py-1 text-sm bg-slate-200 text-slate-700 rounded hover:bg-slate-300 transition-colors"
+                data-speed="1.25"
+              >
+                1.25x
+              </button>
+              <button
+                id="speed-1-5"
+                class="speed-btn px-3 py-1 text-sm bg-slate-200 text-slate-700 rounded hover:bg-slate-300 transition-colors"
+                data-speed="1.5"
+              >
+                1.5x
+              </button>
+              <button
+                id="speed-2"
+                class="speed-btn px-3 py-1 text-sm bg-slate-200 text-slate-700 rounded hover:bg-slate-300 transition-colors"
+                data-speed="2"
+              >
+                2x
+              </button>
+            </div>
+          </div>
+
+          <div class="mt-4 text-center">
+            <span id="current-speed" class="text-sm text-slate-600"
+              >Current speed: 1x</span
+            >
+          </div>
+        </div>
+      </section>
+
       <section
         id="content-placeholder"
         class="mb-12 p-6 bg-white rounded-lg shadow"
@@ -136,6 +214,53 @@
             tooltip.style.display = "none";
           });
         });
+
+        // --- Audio Speed Control ---
+        const audio = document.getElementById("topic-audio");
+        const speedButtons = document.querySelectorAll(".speed-btn");
+        const currentSpeedDisplay = document.getElementById("current-speed");
+
+        speedButtons.forEach((button) => {
+          button.addEventListener("click", () => {
+            const speed = parseFloat(button.dataset.speed);
+
+            // Update audio playback rate
+            audio.playbackRate = speed;
+
+            // Update button styles
+            speedButtons.forEach((btn) => {
+              btn.classList.remove(
+                "bg-sky-600",
+                "text-white",
+                "hover:bg-sky-700",
+                "active"
+              );
+              btn.classList.add(
+                "bg-slate-200",
+                "text-slate-700",
+                "hover:bg-slate-300"
+              );
+            });
+
+            button.classList.remove(
+              "bg-slate-200",
+              "text-slate-700",
+              "hover:bg-slate-300"
+            );
+            button.classList.add(
+              "bg-sky-600",
+              "text-white",
+              "hover:bg-sky-700",
+              "active"
+            );
+
+            // Update speed display
+            currentSpeedDisplay.textContent = `Current speed: ${speed}x`;
+          });
+        });
+
+        // Set initial playback rate
+        audio.playbackRate = 1;
       });
     </script>
   </body>
