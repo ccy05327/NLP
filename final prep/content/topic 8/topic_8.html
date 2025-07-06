@@ -1,0 +1,899 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Topic 8: Information Retrieval</title>
+
+    <!-- Chosen Palette: Academic Neutrals -->
+    <!-- Application Structure Plan: The application is structured as a single, scrollable page that follows the logical progression of the source lecture script. This linear, narrative-driven design is optimal for a learning module, as it guides the student from fundamental concepts to more advanced topics sequentially. Each theoretical section (e.g., Boolean Retrieval, Ranked Retrieval) is immediately paired with a corresponding interactive tool. This structure reinforces learning by allowing immediate application of concepts, which is ideal for the target audience of visual and hands-on learners. The user flow is simple: read a concept, then interact with a tool that demonstrates it, creating a cohesive educational journey. -->
+    <!-- Visualization & Content Choices: 
+        - Boolean Search: (Goal: Demonstrate literal set logic) -> (Method: HTML form + JS DOM manipulation) -> (Interaction: User types query, results highlight) -> (Justification: Direct, hands-on feedback on how operators work without library overhead).
+        - TF-IDF Calculator: (Goal: Demystify the weighting formula) -> (Method: HTML form + JS calculation) -> (Interaction: User inputs text, sees step-by-step calculation) -> (Justification: Makes an abstract formula transparent and easy to understand).
+        - Vector Space Visualizer: (Goal: Visually explain document similarity) -> (Method: Chart.js Scatter Plot) -> (Interaction: User selects docs/query, sees vectors plotted and similarity scores) -> (Justification: Translates the abstract geometric concept of 'angle between vectors' into a concrete, intuitive visual representation, which is more effective than just showing a number).
+        - Glossary: (Goal: Provide quick definitions) -> (Method: HTML/CSS modal) -> (Interaction: Click term to show/hide definition) -> (Justification: Standard, non-disruptive UI for contextual information).
+        Library/Method: Chart.js for canvas-based plotting. All other interactions use vanilla JS.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700&family=Noto+Serif:wght@400;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --primary-color: #2c3e50; /* Slate Gray */
+        --secondary-color: #34495e; /* Darker Slate */
+        --accent-color: #3498db; /* Bright Blue */
+        --highlight-color: #ecf0f1; /* Light Grey */
+        --text-color: #333;
+        --background-color: #ffffff;
+        --border-color: #bdc3c7;
+        --font-main: "Lato", sans-serif;
+        --font-headings: "Noto Serif", serif;
+        --max-width: 900px;
+        --border-radius: 8px;
+        --box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+      }
+
+      body {
+        font-family: var(--font-main);
+        line-height: 1.7;
+        color: var(--text-color);
+        background-color: var(--background-color);
+        font-size: 17px;
+      }
+
+      h1,
+      h2,
+      h3,
+      h4 {
+        font-family: var(--font-headings);
+        color: var(--primary-color);
+        line-height: 1.3;
+      }
+
+      .latex {
+        font-family: "Times New Roman", Times, serif;
+      }
+
+      .glossary-term {
+        color: var(--accent-color);
+        cursor: pointer;
+        border-bottom: 2px dotted var(--accent-color);
+        font-weight: 700;
+      }
+
+      .chart-container {
+        position: relative;
+        height: 400px;
+        max-height: 60vh;
+        width: 100%;
+        max-width: 600px;
+        margin-left: auto;
+        margin-right: auto;
+      }
+    </style>
+  </head>
+  <body class="bg-gray-50">
+    <div class="container mx-auto max-w-4xl p-4 sm:p-8">
+      <header class="text-center mb-12">
+        <h1 class="text-4xl md:text-5xl font-bold mb-4">
+          Topic 8: Information Retrieval
+        </h1>
+        <p class="text-lg text-gray-600 max-w-3xl mx-auto">
+          This module explores the science of finding relevant information in
+          vast, unstructured collections. We will journey from the foundational
+          principles of Boolean logic to the sophisticated mathematical models
+          that power modern search engines.
+        </p>
+      </header>
+
+      <section
+        id="learning-objectives"
+        class="mb-12 bg-white p-6 rounded-lg shadow-md border-l-4 border-blue-500"
+      >
+        <h2 class="text-2xl font-bold mb-4">Learning Objectives</h2>
+        <p class="mb-4">Upon completing this topic, you will be able to:</p>
+        <ul class="list-none space-y-2">
+          <li class="flex items-start">
+            <span class="text-blue-500 font-bold mr-3">✔</span
+            ><span
+              >Understand the fundamental concepts of Information Retrieval
+              (IR), including its core challenges and the mathematical
+              underpinnings of text representation.</span
+            >
+          </li>
+          <li class="flex items-start">
+            <span class="text-blue-500 font-bold mr-3">✔</span
+            ><span
+              >Analyze and explain key IR data structures, with a focus on the
+              design and function of the inverted index.</span
+            >
+          </li>
+          <li class="flex items-start">
+            <span class="text-blue-500 font-bold mr-3">✔</span
+            ><span
+              >Apply and contrast foundational IR models, including the
+              principles of Boolean search and the mechanisms of ranked
+              retrieval.</span
+            >
+          </li>
+        </ul>
+      </section>
+
+      <div class="space-y-12">
+        <section
+          id="what-is-ir"
+          class="bg-white p-6 sm:p-8 rounded-lg shadow-md"
+        >
+          <h2 class="text-3xl font-bold mb-6 border-b pb-3">
+            What is Information Retrieval?
+          </h2>
+          <div class="space-y-4 text-gray-700">
+            <p>
+              At its core, Information Retrieval is the science of searching for
+              information in documents, searching for documents themselves, and
+              also searching for metadata which describe documents. The key
+              challenges that make IR a fascinating and distinct field from
+              simple database queries arise from a few core characteristics:
+            </p>
+            <ul class="list-disc list-inside space-y-2 pl-4">
+              <li>
+                <strong>Unstructured Information:</strong> Unlike a database
+                where data is neatly organized in tables, IR deals with
+                unstructured text. This means we're matching concepts, not just
+                exact values in a predefined field.
+              </li>
+              <li>
+                <strong>Large Collections:</strong> IR systems are designed to
+                operate over collections of millions or even billions of
+                documents, making efficiency a critical concern.
+              </li>
+              <li>
+                <strong>Satisfying an Information Need:</strong> A user's query
+                is often just a rough approximation of their true "information
+                need." A successful IR system must go beyond literal keyword
+                matching to infer the user's intent and provide relevant
+                results.
+              </li>
+            </ul>
+            <h3 class="text-xl font-bold pt-4">
+              The "Berry-Picking" Model of Search
+            </h3>
+            <p>
+              While early models depicted search as a linear process, a more
+              accurate view is Marcia Bates's
+              <strong>Dynamic "Berry-Picking" Model</strong>. This model
+              captures how people truly search: the process is not linear, and
+              what we find often changes what we seek. Success isn't about
+              finding a single "perfect" document, but rather an accumulation of
+              insights gathered along the way, much like picking berries from
+              various bushes.
+            </p>
+          </div>
+        </section>
+
+        <section
+          id="boolean-retrieval"
+          class="bg-white p-6 sm:p-8 rounded-lg shadow-md"
+        >
+          <h2 class="text-3xl font-bold mb-6 border-b pb-3">
+            Boolean Retrieval
+          </h2>
+          <div class="space-y-4 text-gray-700">
+            <p>
+              One of the earliest models, Boolean retrieval, is a set-based
+              approach where documents are retrieved if they satisfy a query
+              expressed using the operators <strong>AND</strong>,
+              <strong>OR</strong>, and <strong>NOT</strong>. While simple and
+              powerful, processing these queries efficiently across large
+              collections requires a more sophisticated data structure than a
+              simple document scan.
+            </p>
+            <h3 class="text-xl font-bold pt-4">
+              The Inverted Index: An Elegant Solution
+            </h3>
+            <p>
+              To overcome scaling challenges, IR systems use the
+              <span class="glossary-term">Inverted Index</span>. This is a
+              dictionary that maps each term in the vocabulary to a sorted list
+              of document IDs where that term appears (a "postings list"). To
+              process an `AND` query, the system can efficiently find the
+              intersection of the sorted lists, which is far faster than
+              scanning every document.
+            </p>
+          </div>
+
+          <div class="mt-8 p-6 bg-gray-50 rounded-lg border">
+            <h4 class="text-lg font-bold mb-2 text-center">
+              Interactive Tool: Boolean Search Simulator
+            </h4>
+            <p class="text-center text-gray-600 mb-4">
+              Test how Boolean logic works. Enter a query using terms from the
+              sample documents and the operators <strong>AND</strong>,
+              <strong>OR</strong>, and <strong>NOT</strong>. Use parentheses
+              `()` for grouping.
+            </p>
+            <div class="flex flex-col sm:flex-row gap-2">
+              <input
+                type="text"
+                id="boolean-query-input"
+                class="flex-grow p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                placeholder="e.g., retrieval AND (text OR data)"
+              />
+              <button
+                id="boolean-search-btn"
+                class="px-6 py-3 bg-blue-600 text-white font-bold rounded-md hover:bg-blue-700 transition-colors"
+              >
+                Search
+              </button>
+            </div>
+            <div id="doc-container" class="mt-4 space-y-2"></div>
+          </div>
+        </section>
+
+        <section
+          id="ranked-retrieval"
+          class="bg-white p-6 sm:p-8 rounded-lg shadow-md"
+        >
+          <h2 class="text-3xl font-bold mb-6 border-b pb-3">
+            Ranked Retrieval & TF-IDF
+          </h2>
+          <div class="space-y-4 text-gray-700">
+            <p>
+              Boolean retrieval returns an unordered set of results. For most
+              applications, users prefer a ranked list where the most relevant
+              documents appear first. This is the goal of
+              <strong>ranked retrieval</strong>.
+            </p>
+            <p>
+              To rank documents, we need to score them. A highly effective
+              weighting scheme is
+              <span class="glossary-term">TF-IDF</span> (Term Frequency-Inverse
+              Document Frequency). It's built on two principles:
+            </p>
+            <ul class="list-disc list-inside space-y-2 pl-4">
+              <li>
+                <strong>Term Frequency (TF):</strong> How often a term appears
+                in a document. More occurrences suggest higher importance. We
+                often use a logarithmic scale to dampen the effect of very
+                frequent terms:
+                <span class="latex">1 + log<sub>10</sub>(tf)</span>.
+              </li>
+              <li>
+                <strong>Inverse Document Frequency (IDF):</strong> A measure of
+                the term's rarity across the entire collection. Rare terms are
+                more informative than common ones (like "the" or "a"). It's
+                calculated as <span class="latex">log<sub>10</sub>(N/df)</span>,
+                where N is the total number of documents and df is the number of
+                documents containing the term.
+              </li>
+            </ul>
+            <p>
+              The final TF-IDF score is the product of these two values. It's
+              high for terms that are frequent in one document but rare overall,
+              making it an excellent heuristic for term importance.
+            </p>
+          </div>
+
+          <div class="mt-8 p-6 bg-gray-50 rounded-lg border">
+            <h4 class="text-lg font-bold mb-2 text-center">
+              Interactive Tool: Live TF-IDF Calculator
+            </h4>
+            <p class="text-center text-gray-600 mb-4">
+              See how a term's importance is calculated. Edit the term, the
+              document, or the corpus to see how the score changes.
+            </p>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label for="tfidf-term" class="block font-bold mb-1"
+                  >Term:</label
+                >
+                <input
+                  type="text"
+                  id="tfidf-term"
+                  value="retrieval"
+                  class="w-full p-2 border border-gray-300 rounded-md"
+                />
+              </div>
+              <div>
+                <label for="tfidf-doc" class="block font-bold mb-1"
+                  >Document:</label
+                >
+                <textarea
+                  id="tfidf-doc"
+                  class="w-full p-2 border border-gray-300 rounded-md h-24 resize-none"
+                >
+Information retrieval is the science of searching for information in documents. Effective retrieval is key.</textarea
+                >
+              </div>
+              <div class="md:col-span-2">
+                <label for="tfidf-corpus" class="block font-bold mb-1"
+                  >Corpus (one document per line):</label
+                >
+                <textarea
+                  id="tfidf-corpus"
+                  class="w-full p-2 border border-gray-300 rounded-md h-24"
+                >
+Information retrieval is a fascinating field.
+A relational database provides structured data access.
+This document discusses text classification and data clustering.</textarea
+                >
+              </div>
+            </div>
+            <button
+              id="tfidf-calc-btn"
+              class="w-full mt-4 px-6 py-3 bg-blue-600 text-white font-bold rounded-md hover:bg-blue-700 transition-colors"
+            >
+              Calculate TF-IDF
+            </button>
+            <div
+              id="tfidf-results"
+              class="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-md"
+              style="display: none"
+            ></div>
+          </div>
+        </section>
+
+        <section
+          id="vector-space-model"
+          class="bg-white p-6 sm:p-8 rounded-lg shadow-md"
+        >
+          <h2 class="text-3xl font-bold mb-6 border-b pb-3">
+            The Vector Space Model
+          </h2>
+          <div class="space-y-4 text-gray-700">
+            <p>
+              The <span class="glossary-term">Vector Space Model</span> (VSM)
+              provides a powerful framework for ranked retrieval. In the VSM,
+              documents and queries are represented as vectors in a
+              high-dimensional space. Each dimension corresponds to a unique
+              term, and the value for that dimension is the term's TF-IDF
+              weight.
+            </p>
+            <p>
+              With documents and queries in the same space, we can rank
+              documents by their proximity to the query. Instead of using
+              Euclidean distance, which is sensitive to document length, we
+              measure the <strong>angle</strong> between the vectors. A smaller
+              angle implies a similar topic.
+            </p>
+            <h3 class="text-xl font-bold pt-4">Cosine Similarity</h3>
+            <p>
+              We use <span class="glossary-term">Cosine Similarity</span> to
+              measure this angle. It calculates the cosine of the angle between
+              two vectors, producing a score between -1 and 1 (or 0 and 1 for
+              non-negative TF-IDF weights). A score closer to 1 means a smaller
+              angle and higher similarity. The system can then rank documents by
+              their cosine similarity score relative to the query vector.
+            </p>
+          </div>
+          <div class="mt-8 p-6 bg-gray-50 rounded-lg border">
+            <h4 class="text-lg font-bold mb-2 text-center">
+              Interactive Tool: Vector Space Visualizer
+            </h4>
+            <p class="text-center text-gray-600 mb-4">
+              This tool plots documents and a query as vectors in a simplified
+              2D space defined by the terms "retrieval" and "data". See how
+              their similarity is represented by the angle between them.
+            </p>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+              <div>
+                <label for="vector-query" class="block font-bold mb-1"
+                  >Query Term:</label
+                >
+                <input
+                  type="text"
+                  id="vector-query"
+                  value="search"
+                  class="w-full p-2 border border-gray-300 rounded-md"
+                />
+              </div>
+              <div>
+                <label for="vector-doc1" class="block font-bold mb-1"
+                  >Document 1:</label
+                >
+                <select
+                  id="vector-doc1"
+                  class="w-full p-2 border border-gray-300 rounded-md bg-white"
+                ></select>
+              </div>
+              <div>
+                <label for="vector-doc2" class="block font-bold mb-1"
+                  >Document 2:</label
+                >
+                <select
+                  id="vector-doc2"
+                  class="w-full p-2 border border-gray-300 rounded-md bg-white"
+                ></select>
+              </div>
+            </div>
+            <button
+              id="vector-plot-btn"
+              class="w-full mt-4 px-6 py-3 bg-blue-600 text-white font-bold rounded-md hover:bg-blue-700 transition-colors"
+            >
+              Plot Vectors
+            </button>
+            <div id="vector-plot-area" class="mt-4" style="display: none">
+              <div class="chart-container">
+                <canvas id="vector-space-canvas"></canvas>
+              </div>
+              <div
+                id="vector-similarity-scores"
+                class="mt-4 text-center font-mono p-4 bg-gray-100 rounded-md"
+              ></div>
+            </div>
+          </div>
+        </section>
+
+        <section
+          id="further-readings"
+          class="bg-white p-6 sm:p-8 rounded-lg shadow-md"
+        >
+          <h2 class="text-3xl font-bold mb-6 border-b pb-3">
+            Further Readings
+          </h2>
+          <div class="space-y-4">
+            <div
+              class="p-4 bg-gray-50 rounded-lg border hover:border-blue-500 hover:shadow-sm transition-all"
+            >
+              <a
+                href="topic 8 reading 1.pdf"
+                target="_blank"
+                class="font-bold text-blue-600 hover:underline"
+                >Reading 1: Boolean Retrieval (Manning, et al.)</a
+              >
+              <p class="text-gray-600 text-sm mt-1">
+                A foundational chapter detailing the classic Boolean model and
+                the inverted index data structure.
+              </p>
+            </div>
+            <div
+              class="p-4 bg-gray-50 rounded-lg border hover:border-blue-500 hover:shadow-sm transition-all"
+            >
+              <a
+                href="topic 8 reading 2.pdf"
+                target="_blank"
+                class="font-bold text-blue-600 hover:underline"
+                >Reading 2: Representing Text (Antić)</a
+              >
+              <p class="text-gray-600 text-sm mt-1">
+                A practical guide on implementing text representations like
+                bag-of-words and TF-IDF.
+              </p>
+            </div>
+            <div
+              class="p-4 bg-gray-50 rounded-lg border hover:border-blue-500 hover:shadow-sm transition-all"
+            >
+              <a
+                href="topic 8 reading 3.pdf"
+                target="_blank"
+                class="font-bold text-blue-600 hover:underline"
+                >Reading 3: Query Expansion for Professional Search
+                (Russell-Rose, et al.)</a
+              >
+              <p class="text-gray-600 text-sm mt-1">
+                A research paper exploring advanced techniques like query
+                expansion in professional search contexts.
+              </p>
+            </div>
+            <div
+              class="p-4 bg-gray-50 rounded-lg border hover:border-blue-500 hover:shadow-sm transition-all"
+            >
+              <a
+                href="topic 8 reading 4.pdf"
+                target="_blank"
+                class="font-bold text-blue-600 hover:underline"
+                >Reading 4: Experimenting with Boolean Search (2Dsearch)</a
+              >
+              <p class="text-gray-600 text-sm mt-1">
+                A hands-on exercise for building complex, structured Boolean
+                search strategies for literature reviews.
+              </p>
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
+
+    <div
+      id="glossary-modal"
+      class="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center p-4 transition-opacity duration-300 opacity-0 pointer-events-none"
+    >
+      <div
+        class="bg-white rounded-lg shadow-xl max-w-lg w-full p-6 relative transform scale-95 transition-transform duration-300"
+      >
+        <button
+          id="modal-close-btn"
+          class="absolute top-3 right-3 text-gray-500 hover:text-gray-800 text-2xl"
+        >
+          &times;
+        </button>
+        <h3 id="modal-term" class="text-2xl font-bold mb-4 text-gray-800"></h3>
+        <p id="modal-definition" class="text-gray-600"></p>
+      </div>
+    </div>
+
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        // --- DATA AND DEFINITIONS ---
+        const sampleDocs = [
+          {
+            id: 1,
+            text: "The primary goal of information retrieval is finding text and data that satisfies a user's need.",
+          },
+          {
+            id: 2,
+            text: "Boolean retrieval uses operators like AND, OR, and NOT for exact-match searching of text.",
+          },
+          {
+            id: 3,
+            text: "Ranked retrieval scores documents based on relevance, often using a vector space model with TF-IDF.",
+          },
+          {
+            id: 4,
+            text: "A relational database provides structured data access, which is different from unstructured text retrieval.",
+          },
+          {
+            id: 5,
+            text: "Data mining and text analysis are key components of modern information systems.",
+          },
+        ];
+
+        const glossary = {
+          "Inverted Index":
+            "A data structure that maps terms to a list of document IDs (postings lists) in which they appear. It is the most common data structure for fast full-text searches because it allows for efficient intersection of term lists to find matching documents.",
+          "TF-IDF":
+            "Stands for Term Frequency-Inverse Document Frequency. It is a numerical statistic that reflects how important a word is to a document in a collection. It is calculated as the product of Term Frequency (how often a word appears in a document) and Inverse Document Frequency (how rare the word is across all documents).",
+          "Vector Space Model":
+            "An algebraic model for representing text documents as vectors of identifiers, such as term weights. In this model, documents and queries are represented as vectors in a high-dimensional space, where each dimension corresponds to a term.",
+          "Cosine Similarity":
+            "A measure of similarity between two non-zero vectors. It is calculated as the cosine of the angle between them. In information retrieval, it is used to measure how similar a document is to a query, with a value closer to 1 indicating higher similarity.",
+        };
+
+        // --- GENERAL HELPER FUNCTIONS ---
+        function tokenize(text) {
+          return text.toLowerCase().match(/\b(\w+)\b/g) || [];
+        }
+
+        // --- GLOSSARY MODAL LOGIC ---
+        const modal = document.getElementById("glossary-modal");
+        const modalContent = modal.querySelector("div");
+        const modalTerm = document.getElementById("modal-term");
+        const modalDef = document.getElementById("modal-definition");
+        const closeBtn = document.getElementById("modal-close-btn");
+
+        document.querySelectorAll(".glossary-term").forEach((termEl) => {
+          termEl.addEventListener("click", (e) => {
+            e.preventDefault();
+            const term = termEl.textContent;
+            if (glossary[term]) {
+              modalTerm.textContent = term;
+              modalDef.textContent = glossary[term];
+              modal.classList.remove("opacity-0", "pointer-events-none");
+              modalContent.classList.remove("scale-95");
+            }
+          });
+        });
+
+        const closeModal = () => {
+          modal.classList.add("opacity-0", "pointer-events-none");
+          modalContent.classList.add("scale-95");
+        };
+        closeBtn.addEventListener("click", closeModal);
+        modal.addEventListener("click", (e) => {
+          if (e.target === modal) {
+            closeModal();
+          }
+        });
+
+        // --- BOOLEAN SEARCH SIMULATOR LOGIC ---
+        const booleanQueryInput = document.getElementById(
+          "boolean-query-input"
+        );
+        const booleanSearchBtn = document.getElementById("boolean-search-btn");
+        const docContainer = document.getElementById("doc-container");
+
+        function populateBooleanDocs() {
+          docContainer.innerHTML = "";
+          sampleDocs.forEach((doc) => {
+            const docEl = document.createElement("div");
+            docEl.className =
+              "p-3 border rounded-md transition-all duration-300 bg-white";
+            docEl.setAttribute("data-doc-id", doc.id);
+            docEl.innerHTML = `<strong class="text-blue-700">Doc ${doc.id}:</strong> ${doc.text}`;
+            docContainer.appendChild(docEl);
+          });
+        }
+        populateBooleanDocs();
+
+        function evaluateBoolean(query, docText) {
+          try {
+            const docTokens = new Set(tokenize(docText));
+            let processedQuery = query
+              .toLowerCase()
+              .replace(/\b(and|or|not)\b/g, (op) => ` ${op.toUpperCase()} `)
+              .replace(/\(/g, " ( ")
+              .replace(/\)/g, " ) ");
+
+            const terms = processedQuery.match(/\b(\w+)\b/g) || [];
+            const uniqueTerms = [...new Set(terms)].filter(
+              (t) => !["AND", "OR", "NOT"].includes(t)
+            );
+
+            uniqueTerms.forEach((term) => {
+              const regex = new RegExp(`\\b${term}\\b`, "g");
+              processedQuery = processedQuery.replace(
+                regex,
+                docTokens.has(term)
+              );
+            });
+
+            processedQuery = processedQuery
+              .replace(/AND/g, "&&")
+              .replace(/OR/g, "||")
+              .replace(/NOT/g, "!");
+
+            // Safe evaluation
+            return new Function(`return ${processedQuery}`)();
+          } catch (e) {
+            console.error("Boolean evaluation error:", e);
+            return false;
+          }
+        }
+
+        booleanSearchBtn.addEventListener("click", () => {
+          const query = booleanQueryInput.value.trim();
+          if (!query) return;
+
+          docContainer.querySelectorAll("div[data-doc-id]").forEach((docEl) => {
+            const docId = parseInt(docEl.getAttribute("data-doc-id"));
+            const doc = sampleDocs.find((d) => d.id === docId);
+            const isMatch = evaluateBoolean(query, doc.text);
+
+            docEl.classList.remove(
+              "bg-green-100",
+              "border-green-400",
+              "bg-red-100",
+              "border-red-400",
+              "bg-white"
+            );
+            if (isMatch) {
+              docEl.classList.add("bg-green-100", "border-green-400");
+            } else {
+              docEl.classList.add("bg-red-100", "border-red-400");
+            }
+          });
+        });
+
+        // --- TF-IDF CALCULATOR LOGIC ---
+        const tfidfTermInput = document.getElementById("tfidf-term");
+        const tfidfDocInput = document.getElementById("tfidf-doc");
+        const tfidfCorpusInput = document.getElementById("tfidf-corpus");
+        const tfidfCalcBtn = document.getElementById("tfidf-calc-btn");
+        const tfidfResults = document.getElementById("tfidf-results");
+
+        tfidfCalcBtn.addEventListener("click", () => {
+          const term = tfidfTermInput.value.trim().toLowerCase();
+          const docText = tfidfDocInput.value;
+          const corpusLines = tfidfCorpusInput.value
+            .split("\n")
+            .filter((line) => line.trim() !== "");
+
+          if (!term || !docText || corpusLines.length === 0) {
+            tfidfResults.innerHTML =
+              '<p class="text-red-600">Please fill in all fields.</p>';
+            tfidfResults.style.display = "block";
+            return;
+          }
+
+          const docTokens = tokenize(docText);
+
+          const tf_raw = docTokens.filter((t) => t === term).length;
+          const tf = tf_raw > 0 ? 1 + Math.log10(tf_raw) : 0;
+          const df = corpusLines.filter((line) =>
+            tokenize(line).includes(term)
+          ).length;
+          const idf = df > 0 ? Math.log10(corpusLines.length / df) : 0;
+          const tfidf = tf * idf;
+
+          tfidfResults.innerHTML = `
+            <div class="font-mono text-sm space-y-3">
+                <p><strong class="text-lg text-black">1. Term Frequency (TF):</strong></p>
+                <p class="pl-4">Raw Count (<span class="font-bold text-blue-600">${term}</span>): <strong class="float-right">${tf_raw}</strong></p>
+                <p class="pl-4">Log-normalized TF: <strong class="float-right">${tf.toFixed(
+                  4
+                )}</strong></p>
+                <hr>
+                <p><strong class="text-lg text-black">2. Inverse Document Frequency (IDF):</strong></p>
+                <p class="pl-4">Total Documents (N): <strong class="float-right">${
+                  corpusLines.length
+                }</strong></p>
+                <p class="pl-4">Documents with term (df): <strong class="float-right">${df}</strong></p>
+                <p class="pl-4">IDF Score: <strong class="float-right">${idf.toFixed(
+                  4
+                )}</strong></p>
+                <hr>
+                <p class="text-lg"><strong class="text-black">3. Final TF-IDF Score:</strong> <strong class="float-right text-blue-700">${tfidf.toFixed(
+                  4
+                )}</strong></p>
+            </div>
+        `;
+          tfidfResults.style.display = "block";
+        });
+
+        // --- VECTOR SPACE VISUALIZER LOGIC ---
+        const vectorQueryInput = document.getElementById("vector-query");
+        const vectorDoc1Select = document.getElementById("vector-doc1");
+        const vectorDoc2Select = document.getElementById("vector-doc2");
+        const vectorPlotBtn = document.getElementById("vector-plot-btn");
+        const vectorPlotArea = document.getElementById("vector-plot-area");
+        const vectorCanvas = document.getElementById("vector-space-canvas");
+        const similarityScoresDiv = document.getElementById(
+          "vector-similarity-scores"
+        );
+        let vectorChart = null;
+
+        sampleDocs.forEach((doc) => {
+          vectorDoc1Select.appendChild(
+            new Option(`Doc ${doc.id}: ${doc.text.substring(0, 25)}...`, doc.id)
+          );
+          vectorDoc2Select.appendChild(
+            new Option(`Doc ${doc.id}: ${doc.text.substring(0, 25)}...`, doc.id)
+          );
+        });
+        vectorDoc1Select.selectedIndex = 0;
+        vectorDoc2Select.selectedIndex = 2;
+
+        const BASIS_TERM_1 = "retrieval";
+        const BASIS_TERM_2 = "data";
+
+        function get2DVector(text, corpus) {
+          const docTokens = tokenize(text);
+          const corpusLines = corpus.map((doc) => doc.text);
+          const N = corpusLines.length;
+
+          const getTfIdf = (term) => {
+            const tf_raw = docTokens.filter((t) => t === term).length;
+            const tf = tf_raw > 0 ? 1 + Math.log10(tf_raw) : 0;
+            const df = corpusLines.filter((line) =>
+              tokenize(line).includes(term)
+            ).length;
+            const idf = df > 0 ? Math.log10(N / df) : 0;
+            return tf * idf;
+          };
+
+          return { x: getTfIdf(BASIS_TERM_1), y: getTfIdf(BASIS_TERM_2) };
+        }
+
+        function calculateCosineSimilarity(vec1, vec2) {
+          const dotProduct = vec1.x * vec2.x + vec1.y * vec2.y;
+          const mag1 = Math.sqrt(vec1.x ** 2 + vec1.y ** 2);
+          const mag2 = Math.sqrt(vec2.x ** 2 + vec2.y ** 2);
+          if (mag1 === 0 || mag2 === 0) return 0;
+          return dotProduct / (mag1 * mag2);
+        }
+
+        vectorPlotBtn.addEventListener("click", () => {
+          const queryText = vectorQueryInput.value;
+          const doc1Id = parseInt(vectorDoc1Select.value);
+          const doc2Id = parseInt(vectorDoc2Select.value);
+
+          if (doc1Id === doc2Id) {
+            alert("Please select two different documents.");
+            return;
+          }
+
+          const doc1Text = sampleDocs.find((d) => d.id === doc1Id).text;
+          const doc2Text = sampleDocs.find((d) => d.id === doc2Id).text;
+
+          const queryVec = get2DVector(queryText, sampleDocs);
+          const doc1Vec = get2DVector(doc1Text, sampleDocs);
+          const doc2Vec = get2DVector(doc2Text, sampleDocs);
+
+          const sim1 = calculateCosineSimilarity(queryVec, doc1Vec);
+          const sim2 = calculateCosineSimilarity(queryVec, doc2Vec);
+
+          similarityScoresDiv.innerHTML = `
+            <p>Similarity (Query vs Doc 1): <strong class="text-blue-600">${sim1.toFixed(
+              4
+            )}</strong></p>
+            <p>Similarity (Query vs Doc 2): <strong class="text-blue-600">${sim2.toFixed(
+              4
+            )}</strong></p>
+        `;
+
+          const chartData = {
+            datasets: [
+              {
+                label: "Query",
+                data: [{ x: 0, y: 0 }, queryVec],
+                borderColor: "#e74c3c",
+                backgroundColor: "#e74c3c",
+                showLine: true,
+                pointRadius: [0, 5],
+                pointHoverRadius: [0, 7],
+              },
+              {
+                label: `Doc ${doc1Id}`,
+                data: [{ x: 0, y: 0 }, doc1Vec],
+                borderColor: "#2ecc71",
+                backgroundColor: "#2ecc71",
+                showLine: true,
+                pointRadius: [0, 5],
+                pointHoverRadius: [0, 7],
+              },
+              {
+                label: `Doc ${doc2Id}`,
+                data: [{ x: 0, y: 0 }, doc2Vec],
+                borderColor: "#3498db",
+                backgroundColor: "#3498db",
+                showLine: true,
+                pointRadius: [0, 5],
+                pointHoverRadius: [0, 7],
+              },
+            ],
+          };
+
+          if (vectorChart) {
+            vectorChart.data = chartData;
+            vectorChart.update();
+          } else {
+            vectorChart = new Chart(vectorCanvas, {
+              type: "scatter",
+              data: chartData,
+              options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                  x: {
+                    beginAtZero: true,
+                    title: {
+                      display: true,
+                      text: `TF-IDF Score for "${BASIS_TERM_1}"`,
+                    },
+                  },
+                  y: {
+                    beginAtZero: true,
+                    title: {
+                      display: true,
+                      text: `TF-IDF Score for "${BASIS_TERM_2}"`,
+                    },
+                  },
+                },
+                plugins: {
+                  legend: { position: "bottom" },
+                  tooltip: {
+                    callbacks: {
+                      label: function (context) {
+                        let label = context.dataset.label || "";
+                        if (label) {
+                          label += ": ";
+                        }
+                        if (context.parsed.x !== 0 || context.parsed.y !== 0) {
+                          label += `(${context.parsed.x.toFixed(
+                            2
+                          )}, ${context.parsed.y.toFixed(2)})`;
+                        } else {
+                          return null;
+                        }
+                        return label;
+                      },
+                    },
+                  },
+                },
+              },
+            });
+          }
+
+          vectorPlotArea.style.display = "block";
+        });
+      });
+    </script>
+  </body>
+</html>

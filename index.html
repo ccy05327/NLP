@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CM3060: Natural Language Processing</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap");
+      body {
+        font-family: "Inter", sans-serif;
+        background-color: #f8fafc; /* slate-50 */
+        color: #1e293b; /* slate-800 */
+      }
+      .nav-card {
+        transition: all 0.3s ease;
+      }
+      .nav-card:hover {
+        transform: translateY(-5px);
+      }
+      /* Subtle animation on page load */
+      .nav-card {
+        animation: fadeInUp 0.6s ease forwards;
+        opacity: 0;
+      }
+      .nav-card:nth-child(1) {
+        animation-delay: 0.1s;
+      }
+      .nav-card:nth-child(2) {
+        animation-delay: 0.2s;
+      }
+      .nav-card:nth-child(3) {
+        animation-delay: 0.3s;
+      }
+      .nav-card:nth-child(4) {
+        animation-delay: 0.4s;
+      }
+      .nav-card:nth-child(5) {
+        animation-delay: 0.5s;
+      }
+
+      @keyframes fadeInUp {
+        from {
+          opacity: 0;
+          transform: translateY(20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+    </style>
+  </head>
+  <body class="bg-slate-50 text-slate-800 min-h-screen">
+    <header class="bg-white shadow-sm">
+      <div
+        class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12 text-center"
+      >
+        <h1 class="text-4xl md:text-5xl font-bold text-slate-900 mb-4">
+          CM3060: Natural Language Processing
+        </h1>
+        <p
+          class="text-lg md:text-xl text-slate-600 font-light max-w-2xl mx-auto"
+        >
+          An interactive study guide. Select a topic to begin.
+        </p>
+      </div>
+    </header>
+
+    <main class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
+      <nav
+        class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-4xl mx-auto"
+      >
+        <a
+          href="final prep/content/topics 1-5/topics_1-5.html"
+          class="nav-card block bg-white rounded-lg shadow-lg hover:shadow-xl p-6 text-decoration-none border border-slate-200 hover:border-sky-300 focus:outline-none focus:ring-3 focus:ring-sky-500 focus:ring-offset-2"
+        >
+          <h3 class="text-xl font-semibold text-slate-900 mb-3">Topics 1-5</h3>
+          <p class="text-slate-600 leading-relaxed">Foundations of NLP</p>
+        </a>
+
+        <a
+          href="final prep/content/topic 6/topic_6.html"
+          class="nav-card block bg-white rounded-lg shadow-lg hover:shadow-xl p-6 text-decoration-none border border-slate-200 hover:border-sky-300 focus:outline-none focus:ring-3 focus:ring-sky-500 focus:ring-offset-2"
+        >
+          <h3 class="text-xl font-semibold text-slate-900 mb-3">Topic 6</h3>
+          <p class="text-slate-600 leading-relaxed">Syntax and Parsing</p>
+        </a>
+
+        <a
+          href="final prep/content/topic 7/topic_7.html"
+          class="nav-card block bg-white rounded-lg shadow-lg hover:shadow-xl p-6 text-decoration-none border border-slate-200 hover:border-sky-300 focus:outline-none focus:ring-3 focus:ring-sky-500 focus:ring-offset-2"
+        >
+          <h3 class="text-xl font-semibold text-slate-900 mb-3">Topic 7</h3>
+          <p class="text-slate-600 leading-relaxed">Information Extraction</p>
+        </a>
+
+        <a
+          href="final prep/content/topic 8/topic_8.html"
+          class="nav-card block bg-white rounded-lg shadow-lg hover:shadow-xl p-6 text-decoration-none border border-slate-200 hover:border-sky-300 focus:outline-none focus:ring-3 focus:ring-sky-500 focus:ring-offset-2"
+        >
+          <h3 class="text-xl font-semibold text-slate-900 mb-3">Topic 8</h3>
+          <p class="text-slate-600 leading-relaxed">Information Retrieval</p>
+        </a>
+
+        <a
+          href="final prep/content/topic 9/topic_9.html"
+          class="nav-card block bg-white rounded-lg shadow-lg hover:shadow-xl p-6 text-decoration-none border border-slate-200 hover:border-sky-300 focus:outline-none focus:ring-3 focus:ring-sky-500 focus:ring-offset-2"
+        >
+          <h3 class="text-xl font-semibold text-slate-900 mb-3">Topic 9</h3>
+          <p class="text-slate-600 leading-relaxed">
+            Chatbots & Dialogue Systems
+          </p>
+        </a>
+      </nav>
+    </main>
+  </body>
+</html>

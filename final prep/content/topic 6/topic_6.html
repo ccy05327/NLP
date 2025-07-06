@@ -1,0 +1,1052 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Topic 6: Syntax and Parsing</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chosen Palette: "Academic Slate" - A minimalist palette using neutral grays (slate) for text and backgrounds, with a calming blue (sky) for interactive elements and highlights, and a soft stone for cards/modules to create a clean, scholarly, and focused learning environment. -->
+    <!-- Application Structure Plan: The application is structured as a single-page, linear narrative or "guided discovery" path. It progresses from foundational concepts to complex problems and finally to algorithmic solutions. The structure is: 1. Introduction & Objectives (sets the stage). 2. What are CFGs? (introduces the core tool) with an Interactive Parser (immediate application). 3. The Problem of Ambiguity (presents a key challenge) with an Ambiguity Explorer (visualizes the problem). 4. The CKY Algorithm (offers a solution) with a CKY Visualizer (demystifies the process). 5. Further Resources. This thematic, step-by-step flow was chosen over a simple report dump because it scaffolds learning, making abstract concepts digestible by presenting a concept, letting the user apply it, showing a problem with it, and then providing a solution. This enhances comprehension for a conceptually difficult topic. -->
+    <!-- Visualization & Content Choices: 1. Interactive Parser: (Report Info: CFG rules) -> (Goal: Organize/Inform) -> (Viz: HTML textareas for input, HTML nested lists for output tree) -> (Interaction: User types grammar/sentence, clicks "Parse", sees tree) -> (Justification: Provides immediate, tangible feedback on how abstract rules create structure) -> (Library/Method: Vanilla JS DOM manipulation). 2. Ambiguity Explorer: (Report Info: PP-attachment ambiguity) -> (Goal: Compare) -> (Viz: Two buttons toggling visibility of two HTML nested list parse trees) -> (Interaction: Click to switch views) -> (Justification: The clearest, most direct way to show how one sentence can have two valid structural interpretations) -> (Library/Method: Vanilla JS). 3. CKY Visualizer: (Report Info: CKY algorithm steps) -> (Goal: Change/Process) -> (Viz: HTML table for the chart, text block for explanations) -> (Interaction: "Next" button click populates the next cell and updates text) -> (Justification: Breaks down a complex dynamic algorithm into manageable, sequential steps, making the logic transparent) -> (Library/Method: Vanilla JS). 4. Glossary: (Report Info: Key terms) -> (Goal: Inform) -> (Viz: HTML pop-up/tooltip) -> (Interaction: Click on term) -> (Justification: Provides non-disruptive, on-demand definitions) -> (Library/Method: Vanilla JS). -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+      body {
+        font-family: "Inter", sans-serif;
+        background-color: #f8fafc; /* slate-50 */
+        color: #1e293b; /* slate-800 */
+      }
+      @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Source+Code+Pro:wght@400;600&display=swap");
+      .font-code {
+        font-family: "Source Code Pro", monospace;
+      }
+      .key-term {
+        color: #0369a1; /* sky-700 */
+        cursor: pointer;
+        font-weight: 600;
+        border-bottom: 2px dotted #7dd3fc; /* sky-300 */
+        position: relative;
+      }
+      #tooltip {
+        position: absolute;
+        background-color: #1e293b; /* slate-800 */
+        color: white;
+        padding: 10px 15px;
+        border-radius: 8px;
+        z-index: 10;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        max-width: 300px;
+        font-size: 0.875rem;
+        line-height: 1.5;
+        display: none;
+      }
+      .parse-tree ul {
+        padding-left: 20px;
+        margin-left: 10px;
+        border-left: 1px solid #cbd5e1; /* slate-300 */
+      }
+      .parse-tree li {
+        position: relative;
+        list-style-type: none;
+        margin: 4px 0;
+      }
+      .parse-tree .node {
+        font-weight: 600;
+        background-color: #f1f5f9; /* slate-100 */
+        padding: 2px 6px;
+        border-radius: 4px;
+        display: inline-block;
+      }
+      .parse-tree .leaf {
+        font-style: italic;
+        background-color: #e0f2fe; /* sky-100 */
+        padding: 2px 6px;
+        border-radius: 4px;
+        display: inline-block;
+      }
+      .cky-table {
+        border-collapse: collapse;
+        margin: 1.5rem auto;
+        font-size: 0.9em;
+      }
+      .cky-table th,
+      .cky-table td {
+        border: 1px solid #cbd5e1; /* slate-300 */
+        padding: 8px;
+        text-align: center;
+        min-width: 80px;
+        height: 60px;
+      }
+      .cky-table th {
+        background-color: #f1f5f9; /* slate-100 */
+        font-weight: 600;
+      }
+      .cky-table .filled {
+        background-color: #e0f2fe; /* sky-100 */
+        font-weight: bold;
+        transition: background-color 0.5s ease;
+      }
+      .cky-table .highlight {
+        background-color: #7dd3fc; /* sky-300 */
+      }
+    </style>
+  </head>
+  <body class="bg-slate-50 text-slate-800">
+    <div id="tooltip"></div>
+
+    <header class="bg-white shadow-sm">
+      <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <h1 class="text-4xl font-bold text-slate-900">
+          Topic 6: Syntax and Parsing
+        </h1>
+        <p class="mt-2 text-lg text-slate-600">
+          An interactive introduction to the structure of language.
+        </p>
+      </div>
+    </header>
+
+    <main class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
+      <section id="objectives" class="mb-12 p-6 bg-white rounded-lg shadow">
+        <h2 class="text-2xl font-bold text-slate-900 mb-4">
+          Learning Objectives
+        </h2>
+        <p class="mb-4 text-slate-600">
+          This module provides an interactive environment to master the core
+          concepts of syntactic analysis. The goal is to move beyond theory and
+          develop a practical, hands-on understanding of how grammars and
+          parsers work.
+        </p>
+        <ul class="list-disc list-inside space-y-2 text-slate-700">
+          <li>
+            Understand the fundamentals of grammar and parsing from a conceptual
+            point of view.
+          </li>
+          <li>
+            Define formal
+            <span
+              class="key-term"
+              data-def="A set of rules that formally describes a language, specifying how to form strings and sentences from an alphabet. The 'backbone' of many formal models of syntax."
+              >grammars</span
+            >
+            for fragments of natural language and apply them.
+          </li>
+          <li>
+            Recognize and analyze the problem of structural
+            <span
+              class="key-term"
+              data-def="A property of sentences where a single string of words can have more than one valid structural interpretation or parse tree, leading to different meanings."
+              >ambiguity</span
+            >.
+          </li>
+          <li>
+            Trace and understand the operation of the
+            <span
+              class="key-term"
+              data-def="A dynamic programming algorithm for parsing context-free grammars. It systematically fills a table to determine if a string can be generated by a grammar."
+              >CKY algorithm</span
+            >
+            for parsing.
+          </li>
+        </ul>
+      </section>
+
+      <section id="audio-lecture" class="mb-12 p-6 bg-white rounded-lg shadow">
+        <h2 class="text-2xl font-bold text-slate-900 mb-4">Audio Lecture</h2>
+        <p class="mb-6 text-slate-600">
+          Listen to the detailed explanation of syntax and parsing concepts. Use
+          the speed controls to adjust playback to your preference.
+        </p>
+
+        <div class="bg-slate-50 p-6 rounded-lg border border-slate-200">
+          <div class="flex items-center justify-center mb-4">
+            <audio
+              id="topic-audio"
+              controls
+              class="w-full max-w-md"
+              preload="metadata"
+            >
+              <source src="topic 6 v2.wav" type="audio/wav" />
+              Your browser does not support the audio element.
+            </audio>
+          </div>
+
+          <div class="flex items-center justify-center space-x-4">
+            <span class="text-sm font-medium text-slate-700"
+              >Playback Speed:</span
+            >
+            <div class="flex space-x-2">
+              <button
+                id="speed-0-5"
+                class="speed-btn px-3 py-1 text-sm bg-slate-200 text-slate-700 rounded hover:bg-slate-300 transition-colors"
+                data-speed="0.5"
+              >
+                0.5x
+              </button>
+              <button
+                id="speed-0-75"
+                class="speed-btn px-3 py-1 text-sm bg-slate-200 text-slate-700 rounded hover:bg-slate-300 transition-colors"
+                data-speed="0.75"
+              >
+                0.75x
+              </button>
+              <button
+                id="speed-1"
+                class="speed-btn px-3 py-1 text-sm bg-sky-600 text-white rounded hover:bg-sky-700 transition-colors active"
+                data-speed="1"
+              >
+                1x
+              </button>
+              <button
+                id="speed-1-25"
+                class="speed-btn px-3 py-1 text-sm bg-slate-200 text-slate-700 rounded hover:bg-slate-300 transition-colors"
+                data-speed="1.25"
+              >
+                1.25x
+              </button>
+              <button
+                id="speed-1-5"
+                class="speed-btn px-3 py-1 text-sm bg-slate-200 text-slate-700 rounded hover:bg-slate-300 transition-colors"
+                data-speed="1.5"
+              >
+                1.5x
+              </button>
+              <button
+                id="speed-2"
+                class="speed-btn px-3 py-1 text-sm bg-slate-200 text-slate-700 rounded hover:bg-slate-300 transition-colors"
+                data-speed="2"
+              >
+                2x
+              </button>
+            </div>
+          </div>
+
+          <div class="mt-4 text-center">
+            <span id="current-speed" class="text-sm text-slate-600"
+              >Current speed: 1x</span
+            >
+          </div>
+        </div>
+      </section>
+
+      <section id="cfgs" class="mb-12">
+        <h2 class="text-3xl font-bold text-slate-900 mb-4">
+          What are Context-Free Grammars?
+        </h2>
+        <div class="space-y-4 text-lg text-slate-700 leading-relaxed">
+          <p>
+            At the heart of parsing is the idea of
+            <span
+              class="key-term"
+              data-def="The idea that groups of words can behave as single units or 'constituents'. For example, in 'the cat sat on the mat', the phrase 'the cat' is a noun phrase (NP) that acts as a single subject."
+              >constituency</span
+            >: groups of words can behave as single units. A
+            <span
+              class="key-term"
+              data-def="A type of formal grammar in which the left-hand side of every production rule consists of a single non-terminal symbol. The term 'context-free' means the rule can be applied regardless of the context in which the non-terminal appears."
+              >Context-Free Grammar (CFG)</span
+            >
+            is a set of rules that defines these constituents and how they can
+            be combined. It's like a blueprint for a language, specifying which
+            sentences are grammatically correct.
+          </p>
+          <p>A CFG has four main components:</p>
+          <ul
+            class="list-disc list-inside bg-white p-4 rounded-lg my-4 border border-slate-200"
+          >
+            <li>
+              <strong class="text-sky-700">Non-terminals:</strong> Symbols that
+              represent phrases or clauses (e.g., S, NP, VP). These are the
+              'categories' in our blueprint.
+            </li>
+            <li>
+              <strong class="text-sky-700">Terminals:</strong> The actual words
+              in the language (e.g., 'the', 'cat', 'slept'). These are the
+              'materials' we build with.
+            </li>
+            <li>
+              <strong class="text-sky-700">Production Rules:</strong> Rules for
+              replacing non-terminals with other symbols (e.g., S → NP VP, which
+              means "a sentence can be formed by a noun phrase followed by a
+              verb phrase").
+            </li>
+            <li>
+              <strong class="text-sky-700">Start Symbol:</strong> A special
+              non-terminal that represents a complete sentence (usually S).
+            </li>
+          </ul>
+        </div>
+
+        <div class="mt-8 p-6 bg-white rounded-lg shadow-lg">
+          <h3 class="text-2xl font-bold text-slate-900 mb-4">
+            Interactive Parser
+          </h3>
+          <p class="mb-6 text-slate-600">
+            Let's make this concrete. Define a simple grammar and lexicon below,
+            then type a sentence to see if it can be parsed. Each rule should be
+            on a new line. Use `|` to separate multiple productions for the same
+            non-terminal (e.g., `N -> cat | dog`).
+          </p>
+          <div class="grid md:grid-cols-2 gap-6">
+            <div>
+              <label
+                for="grammar-input"
+                class="block text-sm font-medium text-slate-700 mb-1"
+                >Grammar (CFG Rules)</label
+              >
+              <textarea
+                id="grammar-input"
+                rows="6"
+                class="w-full p-2 border border-slate-300 rounded-md font-code text-sm"
+              >
+S -> NP VP
+NP -> Det N
+VP -> V NP
+VP -> V</textarea
+              >
+            </div>
+            <div>
+              <label
+                for="lexicon-input"
+                class="block text-sm font-medium text-slate-700 mb-1"
+                >Lexicon (Terminals)</label
+              >
+              <textarea
+                id="lexicon-input"
+                rows="6"
+                class="w-full p-2 border border-slate-300 rounded-md font-code text-sm"
+              >
+Det -> the | a
+N -> cat | dog | man
+V -> saw | chased | slept</textarea
+              >
+            </div>
+          </div>
+          <div class="mt-4">
+            <label
+              for="sentence-input"
+              class="block text-sm font-medium text-slate-700 mb-1"
+              >Sentence</label
+            >
+            <input
+              type="text"
+              id="sentence-input"
+              value="the cat slept"
+              class="w-full p-2 border border-slate-300 rounded-md"
+            />
+          </div>
+          <div class="mt-4 text-center">
+            <button
+              id="parse-btn"
+              class="bg-sky-600 text-white font-bold py-2 px-6 rounded-lg hover:bg-sky-700 transition-colors"
+            >
+              Parse Sentence
+            </button>
+          </div>
+          <div
+            id="parse-output"
+            class="mt-6 p-4 bg-slate-50 rounded-md min-h-[100px] border border-slate-200"
+          >
+            <p class="text-slate-500 text-center">
+              Parse tree will appear here...
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <hr class="my-16 border-slate-300" />
+
+      <section id="ambiguity" class="mb-12">
+        <h2 class="text-3xl font-bold text-slate-900 mb-4">
+          The Problem of Ambiguity
+        </h2>
+        <div class="space-y-4 text-lg text-slate-700 leading-relaxed">
+          <p>
+            A major challenge in parsing is structural ambiguity. A single
+            sentence can often have multiple valid
+            <span
+              class="key-term"
+              data-def="A tree diagram that represents the syntactic structure of a sentence according to a formal grammar. It shows how phrases are constructed from words and other phrases."
+              >parse trees</span
+            >, each corresponding to a different meaning. The classic example is
+            prepositional phrase (PP) attachment.
+          </p>
+          <p>Consider Groucho Marx's famous line:</p>
+          <p
+            class="text-center font-semibold text-2xl my-4 text-slate-800 p-4 bg-white rounded-lg shadow"
+          >
+            "I shot an elephant in my pajamas."
+          </p>
+          <p>
+            Who is in the pajamas? Is it the speaker, or the elephant? Both are
+            grammatically possible interpretations. This is a "PP-attachment"
+            ambiguity: does the prepositional phrase 'in my pajamas' attach to
+            the noun phrase 'an elephant' or the verb phrase 'shot an elephant'?
+          </p>
+        </div>
+
+        <div class="mt-8 p-6 bg-white rounded-lg shadow-lg">
+          <h3 class="text-2xl font-bold text-slate-900 mb-4">
+            Ambiguity Explorer
+          </h3>
+          <p class="mb-6 text-slate-600">
+            Click the buttons below to see the two different parse trees for
+            this sentence, visually demonstrating the ambiguity.
+          </p>
+          <div class="flex justify-center space-x-4 mb-6">
+            <button
+              id="ambiguity-btn-1"
+              class="bg-sky-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-sky-700 transition-colors"
+            >
+              Show Parse 1 (I was in pajamas)
+            </button>
+            <button
+              id="ambiguity-btn-2"
+              class="bg-slate-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-slate-600 transition-colors"
+            >
+              Show Parse 2 (Elephant was in pajamas)
+            </button>
+          </div>
+          <div
+            id="ambiguity-output"
+            class="p-4 bg-slate-50 rounded-md min-h-[200px] border border-slate-200"
+          >
+            <p class="text-slate-500 text-center">Select a parse to view...</p>
+          </div>
+        </div>
+      </section>
+
+      <hr class="my-16 border-slate-300" />
+
+      <section id="cky" class="mb-12">
+        <h2 class="text-3xl font-bold text-slate-900 mb-4">
+          The CKY Algorithm: A Systematic Approach
+        </h2>
+        <div class="space-y-4 text-lg text-slate-700 leading-relaxed">
+          <p>
+            How can a computer systematically find all possible parses for a
+            sentence? One of the earliest and most famous methods is the
+            <span
+              class="key-term"
+              data-def="An algorithm named after its inventors: Cocke, Kasami, and Younger. It uses dynamic programming to efficiently parse context-free grammars."
+              >CKY algorithm</span
+            >. It uses a technique called dynamic programming to build a table
+            of constituents for increasingly larger spans of words.
+          </p>
+          <p>
+            To use CKY, the grammar must first be converted into
+            <span
+              class="key-term"
+              data-def="A simplified, standard form of a context-free grammar where all production rules are of the form A -> B C (a non-terminal yields two non-terminals) or A -> a (a non-terminal yields a terminal). It's a required input format for CKY."
+              >Chomsky Normal Form (CNF)</span
+            >, where every rule is either of the form `A -> B C` or `A -> a`.
+            This binary structure is what allows the algorithm to work
+            efficiently by always combining exactly two smaller constituents to
+            form a larger one.
+          </p>
+        </div>
+
+        <div class="mt-8 p-6 bg-white rounded-lg shadow-lg">
+          <h3 class="text-2xl font-bold text-slate-900 mb-4">CKY Visualizer</h3>
+          <p class="mb-4 text-slate-600">
+            Let's visualize the CKY algorithm in action. We'll parse the
+            sentence
+            <strong class="text-sky-700">"book the flight"</strong> using a
+            simple CNF grammar.
+          </p>
+          <div
+            class="mb-6 font-code bg-slate-800 text-white p-4 rounded-lg text-sm"
+          >
+            <p class="font-bold mb-2">Grammar (CNF):</p>
+            <p>S -> VP</p>
+            <p>VP -> V NP</p>
+            <p>NP -> Det N</p>
+            <p>V -> book</p>
+            <p>Det -> the</p>
+            <p>N -> flight</p>
+          </div>
+
+          <div id="cky-visualizer">
+            <div class="flex justify-center space-x-4 mb-6">
+              <button
+                id="cky-start-btn"
+                class="bg-sky-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-sky-700 transition-colors"
+              >
+                Start
+              </button>
+              <button
+                id="cky-next-btn"
+                class="bg-slate-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-slate-600 transition-colors"
+                disabled
+              >
+                Next Step
+              </button>
+              <button
+                id="cky-reset-btn"
+                class="bg-red-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-red-700 transition-colors"
+                disabled
+              >
+                Reset
+              </button>
+            </div>
+
+            <div class="overflow-x-auto">
+              <table id="cky-table" class="cky-table">
+                <thead>
+                  <tr>
+                    <th></th>
+                    <th>1<br />book</th>
+                    <th>2<br />the</th>
+                    <th>3<br />flight</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <th>1</th>
+                    <td data-row="1" data-col="1"></td>
+                    <td data-row="1" data-col="2"></td>
+                    <td data-row="1" data-col="3"></td>
+                  </tr>
+                  <tr>
+                    <th>2</th>
+                    <td></td>
+                    <td data-row="2" data-col="2"></td>
+                    <td data-row="2" data-col="3"></td>
+                  </tr>
+                  <tr>
+                    <th>3</th>
+                    <td></td>
+                    <td></td>
+                    <td data-row="3" data-col="3"></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div
+              id="cky-explanation"
+              class="mt-4 p-4 bg-slate-100 rounded-md min-h-[60px] text-center text-slate-700"
+            >
+              <p>Click 'Start' to begin filling the CKY chart.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <hr class="my-16 border-slate-300" />
+
+      <footer id="resources" class="bg-white p-6 rounded-lg shadow">
+        <h2 class="text-2xl font-bold text-slate-900 mb-4">Further Readings</h2>
+        <p class="mb-4 text-slate-600">
+          For a deeper dive into these topics, please refer to the following
+          chapters from Jurafsky and Martin's "Speech and Language Processing":
+        </p>
+        <ul class="list-disc list-inside space-y-2">
+          <li>
+            <a
+              href="topic 6 reading 1.pdf"
+              target="_blank"
+              class="text-sky-600 hover:underline"
+              >Chapter 18: Context-Free Grammars and Constituency Parsing</a
+            >
+          </li>
+          <li>
+            <a
+              href="topic 6 reading 2.pdf"
+              target="_blank"
+              class="text-sky-600 hover:underline"
+              >Chapter 13: Machine Translation</a
+            >
+          </li>
+          <li>
+            <a
+              href="topic 6 reading 3.pdf"
+              target="_blank"
+              class="text-sky-600 hover:underline"
+              >Chapter 14: Question Answering, IR, and RAG</a
+            >
+          </li>
+        </ul>
+      </footer>
+    </main>
+
+    <script>
+      document.addEventListener("DOMContentLoaded", () => {
+        // --- Tooltip for Key Terms ---
+        const tooltip = document.getElementById("tooltip");
+        document.querySelectorAll(".key-term").forEach((term) => {
+          term.addEventListener("mouseenter", (e) => {
+            tooltip.textContent = e.target.dataset.def;
+            tooltip.style.display = "block";
+            const rect = e.target.getBoundingClientRect();
+            tooltip.style.left = `${rect.left}px`;
+            tooltip.style.top = `${rect.bottom + 5 + window.scrollY}px`;
+          });
+          term.addEventListener("mouseleave", () => {
+            tooltip.style.display = "none";
+          });
+        });
+
+        // --- Interactive Parser ---
+        const parseBtn = document.getElementById("parse-btn");
+        const grammarInput = document.getElementById("grammar-input");
+        const lexiconInput = document.getElementById("lexicon-input");
+        const sentenceInput = document.getElementById("sentence-input");
+        const parseOutput = document.getElementById("parse-output");
+
+        parseBtn.addEventListener("click", () => {
+          const grammar = {};
+          const lexicon = {};
+
+          grammarInput.value
+            .trim()
+            .split("\n")
+            .forEach((line) => {
+              const [lhs, rhs] = line.split("->").map((s) => s.trim());
+              if (!grammar[lhs]) grammar[lhs] = [];
+              grammar[lhs].push(
+                ...rhs.split("|").map((p) => p.trim().split(" "))
+              );
+            });
+          lexiconInput.value
+            .trim()
+            .split("\n")
+            .forEach((line) => {
+              const [lhs, rhs] = line.split("->").map((s) => s.trim());
+              if (!lexicon[lhs]) lexicon[lhs] = [];
+              lexicon[lhs].push(...rhs.split("|").map((p) => p.trim()));
+            });
+
+          const sentence = sentenceInput.value.trim().split(" ");
+          const fullGrammar = { ...grammar };
+          Object.keys(lexicon).forEach((pos) => {
+            if (!fullGrammar[pos]) fullGrammar[pos] = [];
+            lexicon[pos].forEach((word) => {
+              fullGrammar[pos].push([word]);
+            });
+          });
+
+          const parseTree = parse(sentence, fullGrammar);
+
+          if (parseTree) {
+            parseOutput.innerHTML = "";
+            parseOutput.appendChild(renderTree(parseTree));
+          } else {
+            parseOutput.innerHTML = `<p class="text-red-600 text-center">Failed to parse sentence with the given grammar.</p>`;
+          }
+        });
+
+        function parse(tokens, grammar) {
+          // This is a simplified recursive descent parser for demonstration.
+          // It's not as robust as CKY but works for simple, unambiguous grammars.
+          function parseRecursive(subtokens, symbol) {
+            if (subtokens.length === 0) return null;
+
+            const rules = grammar[symbol] || [];
+            for (const rule of rules) {
+              if (rule.length === 1 && rule[0] === subtokens.join(" ")) {
+                return {
+                  node: symbol,
+                  children: [{ leaf: subtokens.join(" ") }],
+                };
+              }
+              if (rule.length > 1) {
+                // Binary rule
+                for (let i = 1; i < subtokens.length; i++) {
+                  const leftSpan = subtokens.slice(0, i);
+                  const rightSpan = subtokens.slice(i);
+                  const leftChild = parseRecursive(leftSpan, rule[0]);
+                  const rightChild = parseRecursive(rightSpan, rule[1]);
+                  if (leftChild && rightChild) {
+                    return { node: symbol, children: [leftChild, rightChild] };
+                  }
+                }
+              }
+            }
+            return null;
+          }
+          return parseRecursive(tokens, "S");
+        }
+
+        function renderTree(treeData) {
+          const ul = document.createElement("ul");
+          ul.className = "parse-tree";
+          const li = document.createElement("li");
+
+          if (treeData.node) {
+            const nodeSpan = document.createElement("span");
+            nodeSpan.className = "node";
+            nodeSpan.textContent = treeData.node;
+            li.appendChild(nodeSpan);
+
+            if (treeData.children) {
+              const childUl = document.createElement("ul");
+              treeData.children.forEach((child) => {
+                childUl.appendChild(renderTree(child));
+              });
+              li.appendChild(childUl);
+            }
+          } else if (treeData.leaf) {
+            const leafSpan = document.createElement("span");
+            leafSpan.className = "leaf";
+            leafSpan.textContent = treeData.leaf;
+            li.appendChild(leafSpan);
+          }
+          ul.appendChild(li);
+          return ul;
+        }
+
+        // --- Ambiguity Explorer ---
+        const ambiguityBtn1 = document.getElementById("ambiguity-btn-1");
+        const ambiguityBtn2 = document.getElementById("ambiguity-btn-2");
+        const ambiguityOutput = document.getElementById("ambiguity-output");
+
+        const parse1Tree = {
+          node: "S",
+          children: [
+            { node: "NP", children: [{ leaf: "I" }] },
+            {
+              node: "VP",
+              children: [
+                {
+                  node: "VP",
+                  children: [
+                    { node: "V", children: [{ leaf: "shot" }] },
+                    {
+                      node: "NP",
+                      children: [
+                        { node: "Det", children: [{ leaf: "an" }] },
+                        { node: "N", children: [{ leaf: "elephant" }] },
+                      ],
+                    },
+                  ],
+                },
+                {
+                  node: "PP",
+                  children: [
+                    { node: "P", children: [{ leaf: "in" }] },
+                    {
+                      node: "NP",
+                      children: [
+                        { node: "Det", children: [{ leaf: "my" }] },
+                        { node: "N", children: [{ leaf: "pajamas" }] },
+                      ],
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        };
+
+        const parse2Tree = {
+          node: "S",
+          children: [
+            { node: "NP", children: [{ leaf: "I" }] },
+            {
+              node: "VP",
+              children: [
+                { node: "V", children: [{ leaf: "shot" }] },
+                {
+                  node: "NP",
+                  children: [
+                    {
+                      node: "NP",
+                      children: [
+                        { node: "Det", children: [{ leaf: "an" }] },
+                        { node: "N", children: [{ leaf: "elephant" }] },
+                      ],
+                    },
+                    {
+                      node: "PP",
+                      children: [
+                        { node: "P", children: [{ leaf: "in" }] },
+                        {
+                          node: "NP",
+                          children: [
+                            { node: "Det", children: [{ leaf: "my" }] },
+                            { node: "N", children: [{ leaf: "pajamas" }] },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        };
+
+        ambiguityBtn1.addEventListener("click", () => {
+          ambiguityOutput.innerHTML = "";
+          ambiguityOutput.appendChild(renderTree(parse1Tree));
+          ambiguityBtn1.classList.replace("bg-slate-500", "bg-sky-600");
+          ambiguityBtn1.classList.replace(
+            "hover:bg-slate-600",
+            "hover:bg-sky-700"
+          );
+          ambiguityBtn2.classList.replace("bg-sky-600", "bg-slate-500");
+          ambiguityBtn2.classList.replace(
+            "hover:bg-sky-700",
+            "hover:bg-slate-600"
+          );
+        });
+
+        ambiguityBtn2.addEventListener("click", () => {
+          ambiguityOutput.innerHTML = "";
+          ambiguityOutput.appendChild(renderTree(parse2Tree));
+          ambiguityBtn2.classList.replace("bg-slate-500", "bg-sky-600");
+          ambiguityBtn2.classList.replace(
+            "hover:bg-slate-600",
+            "hover:bg-sky-700"
+          );
+          ambiguityBtn1.classList.replace("bg-sky-600", "bg-slate-500");
+          ambiguityBtn1.classList.replace(
+            "hover:bg-sky-700",
+            "hover:bg-slate-600"
+          );
+        });
+
+        // --- CKY Visualizer ---
+        const ckyStartBtn = document.getElementById("cky-start-btn");
+        const ckyNextBtn = document.getElementById("cky-next-btn");
+        const ckyResetBtn = document.getElementById("cky-reset-btn");
+        const ckyTable = document.getElementById("cky-table");
+        const ckyExplanation = document.getElementById("cky-explanation");
+
+        const ckySentence = ["book", "the", "flight"];
+        const ckyGrammar = {
+          S: [["VP"]],
+          VP: [["V", "NP"]],
+          NP: [["Det", "N"]],
+          V: [["book"]],
+          Det: [["the"]],
+          N: [["flight"]],
+        };
+
+        let ckySteps = [];
+        let currentStep = -1;
+
+        function generateCkySteps() {
+          const n = ckySentence.length;
+          const table = Array(n + 1)
+            .fill(0)
+            .map(() =>
+              Array(n + 1)
+                .fill(0)
+                .map(() => new Set())
+            );
+          const revGrammar = {};
+          for (const lhs in ckyGrammar) {
+            for (const rhs of ckyGrammar[lhs]) {
+              if (!revGrammar[rhs.join(" ")]) revGrammar[rhs.join(" ")] = [];
+              revGrammar[rhs.join(" ")].push(lhs);
+            }
+          }
+
+          const steps = [];
+
+          // Step 1: Fill diagonal
+          for (let i = 0; i < n; i++) {
+            const word = ckySentence[i];
+            const partsOfSpeech = revGrammar[word] || [];
+            for (const pos of partsOfSpeech) {
+              table[i][i + 1].add(pos);
+            }
+            steps.push({
+              type: "fill_diag",
+              row: i + 1,
+              col: i + 1,
+              word: word,
+              pos: Array.from(table[i][i + 1]).join(", "),
+              explanation: `The word "${word}" can be a ${Array.from(
+                table[i][i + 1]
+              ).join(", ")}. Filling cell [${i + 1}, ${i + 1}].`,
+            });
+          }
+
+          // Steps 2 to n: Fill upper triangle
+          for (let len = 2; len <= n; len++) {
+            for (let i = 0; i <= n - len; i++) {
+              let j = i + len;
+              for (let k = i + 1; k < j; k++) {
+                const b_constituents = table[i][k];
+                const c_constituents = table[k][j];
+                steps.push({
+                  type: "check",
+                  explanation: `Checking combination of cell [${
+                    i + 1
+                  },${k}] and [${k},${j}].`,
+                  highlight: [
+                    [i + 1, k],
+                    [k, j],
+                  ],
+                });
+                if (b_constituents.size > 0 && c_constituents.size > 0) {
+                  for (const B of b_constituents) {
+                    for (const C of c_constituents) {
+                      const rhs = `${B} ${C}`;
+                      const A_constituents = revGrammar[rhs] || [];
+                      if (A_constituents.length > 0) {
+                        for (const A of A_constituents) {
+                          table[i][j].add(A);
+                          steps.push({
+                            type: "fill_upper",
+                            row: i + 1,
+                            col: j,
+                            constituent: A,
+                            B,
+                            C,
+                            explanation: `Found rule ${A} -> ${B} ${C}. Adding ${A} to cell [${
+                              i + 1
+                            }, ${j}].`,
+                          });
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+
+          // Final step
+          if (table[0][n].has("S")) {
+            steps.push({
+              type: "final",
+              success: true,
+              explanation: `Success! The start symbol 'S' was found in the top-right cell [1, ${n}]. The sentence is grammatical.`,
+            });
+          } else {
+            steps.push({
+              type: "final",
+              success: false,
+              explanation: `Failed. The start symbol 'S' was not found in the top-right cell [1, ${n}]. The sentence is ungrammatical.`,
+            });
+          }
+          return steps;
+        }
+
+        function resetCky() {
+          ckySteps = [];
+          currentStep = -1;
+          ckyTable.querySelectorAll("td").forEach((td) => {
+            td.textContent = "";
+            td.className = "";
+          });
+          ckyExplanation.innerHTML =
+            "<p>Click 'Start' to begin filling the CKY chart.</p>";
+          ckyStartBtn.disabled = false;
+          ckyNextBtn.disabled = true;
+          ckyResetBtn.disabled = true;
+        }
+
+        ckyStartBtn.addEventListener("click", () => {
+          resetCky();
+          ckySteps = generateCkySteps();
+          ckyStartBtn.disabled = true;
+          ckyNextBtn.disabled = false;
+          ckyResetBtn.disabled = false;
+          ckyExplanation.innerHTML =
+            "<p>Generated CKY steps. Click 'Next Step' to proceed.</p>";
+        });
+
+        ckyResetBtn.addEventListener("click", resetCky);
+
+        ckyNextBtn.addEventListener("click", () => {
+          currentStep++;
+          if (currentStep >= ckySteps.length) {
+            ckyNextBtn.disabled = true;
+            return;
+          }
+
+          const step = ckySteps[currentStep];
+          ckyExplanation.innerHTML = `<p>${step.explanation}</p>`;
+
+          ckyTable
+            .querySelectorAll("td")
+            .forEach((td) => td.classList.remove("highlight"));
+
+          if (step.type === "fill_diag" || step.type === "fill_upper") {
+            const cell = ckyTable.querySelector(
+              `td[data-row="${step.row}"][data-col="${step.col}"]`
+            );
+            if (cell) {
+              cell.textContent = Array.from(
+                new Set([
+                  ...cell.textContent.split(",").filter(Boolean),
+                  ...(step.pos || step.constituent).split(","),
+                ])
+              ).join(", ");
+              cell.classList.add("filled");
+            }
+          } else if (step.type === "check" && step.highlight) {
+            const [cell1_coords, cell2_coords] = step.highlight;
+            const cell1 = ckyTable.querySelector(
+              `td[data-row="${cell1_coords[0]}"][data-col="${cell1_coords[1]}"]`
+            );
+            const cell2 = ckyTable.querySelector(
+              `td[data-row="${cell2_coords[0]}"][data-col="${cell2_coords[1]}"]`
+            );
+            if (cell1) cell1.classList.add("highlight");
+            if (cell2) cell2.classList.add("highlight");
+          } else if (step.type === "final") {
+            const finalCell = ckyTable.querySelector(
+              `td[data-row="1"][data-col="${ckySentence.length}"]`
+            );
+            if (finalCell) {
+              finalCell.style.backgroundColor = step.success
+                ? "#86efac"
+                : "#fca5a5";
+            }
+            ckyNextBtn.disabled = true;
+          }
+        });
+
+        // --- Audio Speed Control ---
+        const audio = document.getElementById("topic-audio");
+        const speedButtons = document.querySelectorAll(".speed-btn");
+        const currentSpeedDisplay = document.getElementById("current-speed");
+
+        speedButtons.forEach((button) => {
+          button.addEventListener("click", () => {
+            const speed = parseFloat(button.dataset.speed);
+
+            // Update audio playback rate
+            audio.playbackRate = speed;
+
+            // Update button styles
+            speedButtons.forEach((btn) => {
+              btn.classList.remove(
+                "bg-sky-600",
+                "text-white",
+                "hover:bg-sky-700",
+                "active"
+              );
+              btn.classList.add(
+                "bg-slate-200",
+                "text-slate-700",
+                "hover:bg-slate-300"
+              );
+            });
+
+            button.classList.remove(
+              "bg-slate-200",
+              "text-slate-700",
+              "hover:bg-slate-300"
+            );
+            button.classList.add(
+              "bg-sky-600",
+              "text-white",
+              "hover:bg-sky-700",
+              "active"
+            );
+
+            // Update speed display
+            currentSpeedDisplay.textContent = `Current speed: ${speed}x`;
+          });
+        });
+
+        // Set initial playback rate
+        audio.playbackRate = 1;
+      });
+    </script>
+  </body>
+</html>

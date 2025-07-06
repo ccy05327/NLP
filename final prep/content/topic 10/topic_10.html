@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Topic 10: Advanced NLP Applications</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      body {
+        font-family: "Inter", sans-serif;
+        background-color: #f8fafc; /* slate-50 */
+        color: #1e293b; /* slate-800 */
+      }
+      @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Source+Code+Pro:wght@400;600&display=swap");
+      .font-code {
+        font-family: "Source Code Pro", monospace;
+      }
+      .key-term {
+        color: #0369a1; /* sky-700 */
+        cursor: pointer;
+        font-weight: 600;
+        border-bottom: 2px dotted #7dd3fc; /* sky-300 */
+        position: relative;
+      }
+      #tooltip {
+        position: absolute;
+        background-color: #1e293b; /* slate-800 */
+        color: white;
+        padding: 10px 15px;
+        border-radius: 8px;
+        z-index: 10;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        max-width: 300px;
+        font-size: 0.875rem;
+        line-height: 1.5;
+        display: none;
+      }
+    </style>
+  </head>
+  <body class="bg-slate-50 text-slate-800">
+    <div id="tooltip"></div>
+
+    <header class="bg-white shadow-sm">
+      <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <h1 class="text-4xl font-bold text-slate-900">
+          Topic 10: Advanced NLP Applications
+        </h1>
+        <p class="mt-2 text-lg text-slate-600">
+          An exploration of cutting-edge applications in natural language
+          processing.
+        </p>
+      </div>
+    </header>
+
+    <main class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
+      <section id="objectives" class="mb-12 p-6 bg-white rounded-lg shadow">
+        <h2 class="text-2xl font-bold text-slate-900 mb-4">
+          Learning Objectives
+        </h2>
+        <p class="mb-4 text-slate-600">
+          By the end of this module, you will understand advanced applications
+          and emerging trends in natural language processing.
+        </p>
+        <ul class="list-disc list-inside space-y-2 text-slate-700">
+          <li>Explore state-of-the-art NLP models and architectures</li>
+          <li>Understand transformer-based language models</li>
+          <li>Learn about multimodal NLP applications</li>
+          <li>Apply advanced techniques to real-world problems</li>
+        </ul>
+      </section>
+
+      <section
+        id="content-placeholder"
+        class="mb-12 p-6 bg-white rounded-lg shadow"
+      >
+        <h2 class="text-2xl font-bold text-slate-900 mb-4">
+          Content Coming Soon
+        </h2>
+        <p class="text-slate-600 text-center py-8">
+          This section will contain interactive content for Topic 10: Advanced
+          NLP Applications.
+        </p>
+      </section>
+
+      <footer id="resources" class="bg-white p-6 rounded-lg shadow">
+        <h2 class="text-2xl font-bold text-slate-900 mb-4">Further Readings</h2>
+        <p class="mb-4 text-slate-600">
+          For a deeper dive into these topics, please refer to the following
+          resources:
+        </p>
+        <ul class="list-disc list-inside space-y-2">
+          <li>
+            <a
+              href="topic 10 reading 1.pdf"
+              target="_blank"
+              class="text-sky-600 hover:underline"
+            >
+              Reading 1: Transformer Architectures
+            </a>
+          </li>
+          <li>
+            <a
+              href="topic 10 reading 2.pdf"
+              target="_blank"
+              class="text-sky-600 hover:underline"
+            >
+              Reading 2: Pre-trained Language Models
+            </a>
+          </li>
+          <li>
+            <a
+              href="topic 10 reading 3.pdf"
+              target="_blank"
+              class="text-sky-600 hover:underline"
+            >
+              Reading 3: Multimodal NLP Applications
+            </a>
+          </li>
+        </ul>
+      </footer>
+    </main>
+
+    <script>
+      document.addEventListener("DOMContentLoaded", () => {
+        // --- Tooltip for Key Terms ---
+        const tooltip = document.getElementById("tooltip");
+        document.querySelectorAll(".key-term").forEach((term) => {
+          term.addEventListener("mouseenter", (e) => {
+            tooltip.textContent = e.target.dataset.def;
+            tooltip.style.display = "block";
+            const rect = e.target.getBoundingClientRect();
+            tooltip.style.left = `${rect.left}px`;
+            tooltip.style.top = `${rect.bottom + 5 + window.scrollY}px`;
+          });
+          term.addEventListener("mouseleave", () => {
+            tooltip.style.display = "none";
+          });
+        });
+      });
+    </script>
+  </body>
+</html>
