@@ -1,9 +1,19 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="scroll-smooth">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Topic 9: Chatbots & Dialogue Systems</title>
+    <!-- Chosen Palette: Warm Neutral with Slate Blue accents -->
+    <!-- Application Structure Plan: The application is structured as a single-page, linear narrative, mimicking a chapter in an interactive textbook. It begins with a clear statement of learning objectives. The content is divided into four logical sections: 1) Fundamentals of Conversation, 2) Chatbots, 3) Task-Based Systems, and 4) Design & Ethics. A sticky top navigation bar allows for easy jumping between sections and provides clear signposting. This structure was chosen because it guides the learner through the material sequentially, building from foundational concepts to more complex applications and considerations. Interactive elements are strategically placed immediately following the explanation of a concept to provide immediate reinforcement and hands-on "learn-by-doing" experience, which is optimal for the target student audience. -->
+    <!-- Visualization & Content Choices: 
+        - Learning Objectives: (Report Info: Course Syllabus) -> (Goal: Inform) -> (Viz: Styled Box) -> (Interaction: N/A) -> (Justification: Clearly sets user expectations at the start.) -> (Library/Method: HTML/Tailwind).
+        - Speech Act Identifier: (Report Info: Properties of Conversation) -> (Goal: Reinforce) -> (Viz: Interactive Quiz) -> (Interaction: Click buttons) -> (Justification: Actively tests understanding of a key classification concept.) -> (Library/Method: Vanilla JS).
+        - Architecture Comparison: (Report Info: System Architectures) -> (Goal: Compare) -> (Viz: HTML Table) -> (Interaction: N/A) -> (Justification: Provides a concise, structured summary of the key differences between system types.) -> (Library/Method: HTML/Tailwind).
+        - ELIZA-style Chatbot: (Report Info: Rule-based chatbots) -> (Goal: Experience) -> (Viz: Chat Interface) -> (Interaction: Text input) -> (Justification: Gives a first-hand, memorable experience of how simple rule-based systems work, demonstrating their strengths and limitations more effectively than text alone.) -> (Library/Method: Vanilla JS).
+        - Dialogue State Architecture Diagram: (Report Info: Task-based system components) -> (Goal: Organize) -> (Viz: Diagram) -> (Interaction: N/A) -> (Justification: Visually represents the complex pipeline of a modern dialogue system, making the abstract flow of information concrete and easier to understand.) -> (Library/Method: HTML/Tailwind using Flexbox).
+        - Frame & Slot Visualizer: (Report Info: Slot-filling mechanism) -> (Goal: Demonstrate) -> (Viz: Parser Interface) -> (Interaction: Text input) -> (Justification: Directly illustrates the core mechanism of task-based systems (SLU) by allowing the user to see their own language deconstructed into a machine-readable format.) -> (Library/Method: Vanilla JS).
+        - CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
       body {
@@ -15,6 +25,22 @@
       .font-code {
         font-family: "Source Code Pro", monospace;
       }
+      h1,
+      h2,
+      h3,
+      h4 {
+        color: #0f172a; /* slate-900 */
+      }
+      h2 {
+        border-bottom: 1px solid #cbd5e1; /* slate-300 */
+      }
+      .nav-link {
+        transition: color 0.3s ease, border-color 0.3s ease;
+      }
+      .nav-link.active {
+        color: #0369a1; /* sky-700 */
+        border-bottom-color: #0369a1;
+      }
       .key-term {
         color: #0369a1; /* sky-700 */
         cursor: pointer;
@@ -22,196 +48,848 @@
         border-bottom: 2px dotted #7dd3fc; /* sky-300 */
         position: relative;
       }
-      #tooltip {
-        position: absolute;
-        background-color: #1e293b; /* slate-800 */
+      .interactive-box {
+        background-color: #ffffff;
+        border: 1px solid #e2e8f0; /* slate-200 */
+        box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1),
+          0 2px 4px -2px rgb(0 0 0 / 0.1);
+      }
+      .chat-message {
+        display: flex;
+        flex-direction: column;
+        max-width: 80%;
+      }
+      .user-message .bubble {
+        background-color: #0369a1; /* sky-700 */
         color: white;
-        padding: 10px 15px;
-        border-radius: 8px;
-        z-index: 10;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        max-width: 300px;
-        font-size: 0.875rem;
-        line-height: 1.5;
-        display: none;
+        align-self: flex-end;
+        border-bottom-right-radius: 0.25rem;
+      }
+      .bot-message .bubble {
+        background-color: #e2e8f0; /* slate-200 */
+        color: #1e293b; /* slate-800 */
+        align-self: flex-start;
+        border-bottom-left-radius: 0.25rem;
+      }
+      section:target {
+        scroll-margin-top: 80px;
       }
     </style>
   </head>
-  <body class="bg-slate-50 text-slate-800">
-    <div id="tooltip"></div>
-
-    <header class="bg-white shadow-sm">
-      <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        <h1 class="text-4xl font-bold text-slate-900">
-          Topic 9: Chatbots & Dialogue Systems
-        </h1>
-        <p class="mt-2 text-lg text-slate-600">
-          An interactive exploration of conversational AI systems.
-        </p>
-      </div>
-    </header>
-
-    <main class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
-      <section id="objectives" class="mb-12 p-6 bg-white rounded-lg shadow">
-        <h2 class="text-2xl font-bold text-slate-900 mb-4">
-          Learning Objectives
-        </h2>
-        <p class="mb-4 text-slate-600">
-          By the end of this module, you will understand the architecture and
-          design principles of modern chatbots and dialogue systems.
-        </p>
-        <ul class="list-disc list-inside space-y-2 text-slate-700">
-          <li>Understand the components of dialogue systems</li>
-          <li>Learn about intent recognition and slot filling</li>
-          <li>Explore dialogue state tracking and management</li>
-          <li>Apply natural language generation for responses</li>
-        </ul>
-      </section>
-
-      <section id="audio-lecture" class="mb-12 p-6 bg-white rounded-lg shadow">
-        <h2 class="text-2xl font-bold text-slate-900 mb-4">Audio Lecture</h2>
-        <p class="mb-6 text-slate-600">
-          Listen to the detailed explanation of chatbots and dialogue systems. Use
-          the speed controls to adjust playback to your preference.
-        </p>
-
-        <div class="bg-slate-50 p-6 rounded-lg border border-slate-200">
-          <div class="flex items-center justify-center mb-4">
-            <audio
-              id="topic-audio"
-              controls
-              class="w-full max-w-md"
-              preload="metadata"
-            >
-              <source src="topic 9 (short).wav" type="audio/wav" />
-              Your browser does not support the audio element.
-            </audio>
+  <body class="antialiased">
+    <header
+      id="main-header"
+      class="bg-white/80 backdrop-blur-lg sticky top-0 z-50 border-b border-slate-200"
+    >
+      <nav class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex items-center justify-between h-16">
+          <div class="flex items-center">
+            <span class="font-bold text-lg text-slate-800">Topic 9</span>
           </div>
-
-          <div class="flex items-center justify-center space-x-4">
-            <span class="text-sm font-medium text-slate-700"
-              >Playback Speed:</span
-            >
-            <div class="flex space-x-2">
-              <button
-                id="speed-0-5"
-                class="speed-btn px-3 py-1 text-sm bg-slate-200 text-slate-700 rounded hover:bg-slate-300 transition-colors"
-                data-speed="0.5"
+          <div class="hidden md:block">
+            <div class="ml-10 flex items-baseline space-x-4">
+              <a
+                href="#part1"
+                class="nav-link px-3 py-2 text-sm font-medium text-slate-600 hover:text-sky-700 border-b-2 border-transparent"
+                >Fundamentals</a
               >
-                0.5x
-              </button>
-              <button
-                id="speed-0-75"
-                class="speed-btn px-3 py-1 text-sm bg-slate-200 text-slate-700 rounded hover:bg-slate-300 transition-colors"
-                data-speed="0.75"
+              <a
+                href="#part2"
+                class="nav-link px-3 py-2 text-sm font-medium text-slate-600 hover:text-sky-700 border-b-2 border-transparent"
+                >Chatbots</a
               >
-                0.75x
-              </button>
-              <button
-                id="speed-1"
-                class="speed-btn px-3 py-1 text-sm bg-sky-600 text-white rounded hover:bg-sky-700 transition-colors active"
-                data-speed="1"
+              <a
+                href="#part3"
+                class="nav-link px-3 py-2 text-sm font-medium text-slate-600 hover:text-sky-700 border-b-2 border-transparent"
+                >Task Systems</a
               >
-                1x
-              </button>
-              <button
-                id="speed-1-25"
-                class="speed-btn px-3 py-1 text-sm bg-slate-200 text-slate-700 rounded hover:bg-slate-300 transition-colors"
-                data-speed="1.25"
+              <a
+                href="#part4"
+                class="nav-link px-3 py-2 text-sm font-medium text-slate-600 hover:text-sky-700 border-b-2 border-transparent"
+                >Design & Ethics</a
               >
-                1.25x
-              </button>
-              <button
-                id="speed-1-5"
-                class="speed-btn px-3 py-1 text-sm bg-slate-200 text-slate-700 rounded hover:bg-slate-300 transition-colors"
-                data-speed="1.5"
-              >
-                1.5x
-              </button>
-              <button
-                id="speed-2"
-                class="speed-btn px-3 py-1 text-sm bg-slate-200 text-slate-700 rounded hover:bg-slate-300 transition-colors"
-                data-speed="2"
-              >
-                2x
-              </button>
             </div>
           </div>
-
-          <div class="mt-4 text-center">
-            <span id="current-speed" class="text-sm text-slate-600"
-              >Current speed: 1x</span
-            >
-          </div>
         </div>
-      </section>
+      </nav>
+    </header>
 
-      <section
-        id="content-placeholder"
-        class="mb-12 p-6 bg-white rounded-lg shadow"
-      >
-        <h2 class="text-2xl font-bold text-slate-900 mb-4">
-          Content Coming Soon
-        </h2>
-        <p class="text-slate-600 text-center py-8">
-          This section will contain interactive content for Topic 9: Chatbots &
-          Dialogue Systems.
-        </p>
-      </section>
+    <main class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
+      <div class="space-y-12">
+        <div class="text-center">
+          <h1 class="text-4xl md:text-5xl font-bold tracking-tight">
+            Chatbots & Dialogue Systems
+          </h1>
+          <p class="mt-4 text-lg text-slate-600">
+            An interactive exploration of how machines learn to converse.
+          </p>
+        </div>
 
-      <footer id="resources" class="bg-white p-6 rounded-lg shadow">
-        <h2 class="text-2xl font-bold text-slate-900 mb-4">Further Readings</h2>
-        <p class="mb-4 text-slate-600">
-          For a deeper dive into these topics, please refer to the following
-          resources:
+        <section id="objectives" class="mb-12 p-6 bg-white rounded-lg shadow">
+          <h3 class="text-xl font-semibold text-slate-900 mb-2">
+            Learning Objectives
+          </h3>
+          <p class="mb-3">
+            Upon successful completion of this topic, you will be able to:
+          </p>
+          <ul class="list-disc list-inside space-y-1">
+            <li>Understand the properties of human conversation.</li>
+            <li>Analyse dialogue system architectures.</li>
+            <li>Create simple chatbots.</li>
+          </ul>
+        </section>
+
+        <section
+          id="audio-lecture"
+          class="mb-12 p-6 bg-white rounded-lg shadow"
+        >
+          <h2 class="text-2xl font-bold text-slate-900 mb-4">Audio Lecture</h2>
+          <p class="mb-6 text-slate-600">
+            Listen to the detailed explanation of chatbots and dialogue systems
+            concepts. Use the speed controls to adjust playback to your
+            preference.
+          </p>
+
+          <div class="bg-slate-50 p-6 rounded-lg border border-slate-200">
+            <div class="flex items-center justify-center mb-4">
+              <audio
+                id="topic-audio"
+                controls
+                class="w-full max-w-md"
+                preload="metadata"
+              >
+                <source src="topic 9 (short).wav" type="audio/wav" />
+                Your browser does not support the audio element.
+              </audio>
+            </div>
+
+            <div
+              class="flex flex-col sm:flex-row sm:items-center justify-center space-y-4 sm:space-y-0 sm:space-x-4"
+            >
+              <span
+                class="text-sm font-medium text-slate-700 text-center sm:text-left"
+                >Playback Speed:</span
+              >
+              <div class="flex flex-wrap justify-center gap-2">
+                <button
+                  id="speed-0-5"
+                  class="speed-btn px-2 sm:px-3 py-1 text-xs sm:text-sm bg-slate-200 text-slate-700 rounded hover:bg-slate-300 transition-colors"
+                  data-speed="0.5"
+                >
+                  0.5x
+                </button>
+                <button
+                  id="speed-0-75"
+                  class="speed-btn px-2 sm:px-3 py-1 text-xs sm:text-sm bg-slate-200 text-slate-700 rounded hover:bg-slate-300 transition-colors"
+                  data-speed="0.75"
+                >
+                  0.75x
+                </button>
+                <button
+                  id="speed-1"
+                  class="speed-btn px-2 sm:px-3 py-1 text-xs sm:text-sm bg-sky-600 text-white rounded hover:bg-sky-700 transition-colors active"
+                  data-speed="1"
+                >
+                  1x
+                </button>
+                <button
+                  id="speed-1-25"
+                  class="speed-btn px-2 sm:px-3 py-1 text-xs sm:text-sm bg-slate-200 text-slate-700 rounded hover:bg-slate-300 transition-colors"
+                  data-speed="1.25"
+                >
+                  1.25x
+                </button>
+                <button
+                  id="speed-1-5"
+                  class="speed-btn px-2 sm:px-3 py-1 text-xs sm:text-sm bg-slate-200 text-slate-700 rounded hover:bg-slate-300 transition-colors"
+                  data-speed="1.5"
+                >
+                  1.5x
+                </button>
+                <button
+                  id="speed-2"
+                  class="speed-btn px-2 sm:px-3 py-1 text-xs sm:text-sm bg-slate-200 text-slate-700 rounded hover:bg-slate-300 transition-colors"
+                  data-speed="2"
+                >
+                  2x
+                </button>
+              </div>
+            </div>
+
+            <div class="mt-4 text-center">
+              <span id="current-speed" class="text-xs sm:text-sm text-slate-600"
+                >Current speed: 1x</span
+              >
+            </div>
+          </div>
+        </section>
+
+        <p class="text-lg leading-relaxed">
+          Designing systems that can converse with humans is a quintessential
+          challenge in Natural Language Processing, representing a
+          multidisciplinary task that blends computer science, linguistics, and
+          even psychology. This module traces the evolution of dialogue systems,
+          from early symbolic rule-based approaches like ELIZA to the complex,
+          data-driven neural models of today. By following this path, we gain
+          insight into the broader history of NLP itself.
         </p>
-        <ul class="list-disc list-inside space-y-2">
-          <li>
-            <a
-              href="topic 9 reading 1.pdf"
-              target="_blank"
-              class="text-sky-600 hover:underline"
-            >
-              Reading 1: Dialogue System Architecture
-            </a>
-          </li>
-          <li>
-            <a
-              href="topic 9 reading 2.pdf"
-              target="_blank"
-              class="text-sky-600 hover:underline"
-            >
-              Reading 2: Intent Recognition and Slot Filling
-            </a>
-          </li>
-          <li>
-            <a
-              href="topic 9 reading 3.pdf"
-              target="_blank"
-              class="text-sky-600 hover:underline"
-            >
-              Reading 3: Dialogue State Tracking
-            </a>
-          </li>
-        </ul>
-      </footer>
+
+        <section id="part1">
+          <h2 class="text-3xl font-bold mb-4 pt-8">
+            Part 1: The Blueprint of Conversation
+          </h2>
+          <div class="space-y-4 text-slate-700 leading-relaxed">
+            <p>
+              Before automating conversation, we must understand its fundamental
+              properties. Human dialogue is not merely an exchange of sentences;
+              it is a complex, cooperative activity governed by subtle rules and
+              structures. These properties form the requirements for any
+              conversational agent we wish to build.
+            </p>
+            <h3 class="text-2xl font-semibold pt-4">
+              Core Properties of Dialogue
+            </h3>
+            <p>
+              <span class="key-term">Turns:</span> A dialogue is structured as a
+              sequence of turns. A key challenge, especially in spoken systems,
+              is <span class="key-term">endpointing</span>—knowing when a
+              speaker has finished their turn so the system can respond without
+              awkward silence or rude interruption.
+            </p>
+            <p>
+              <span class="key-term">Speech Acts:</span> Utterances perform
+              actions. Understanding the speaker's intent (their speech act) is
+              vital. A common taxonomy divides them into four major classes:
+            </p>
+
+            <div class="overflow-x-auto">
+              <table
+                class="min-w-full bg-white border border-slate-200 rounded-lg"
+              >
+                <thead class="bg-slate-100">
+                  <tr>
+                    <th
+                      class="py-3 px-4 text-left font-semibold text-slate-700"
+                    >
+                      Speech Act
+                    </th>
+                    <th
+                      class="py-3 px-4 text-left font-semibold text-slate-700"
+                    >
+                      Function
+                    </th>
+                    <th
+                      class="py-3 px-4 text-left font-semibold text-slate-700"
+                    >
+                      Example
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr class="border-t">
+                    <td class="py-3 px-4">
+                      <span class="font-semibold">Constative</span>
+                    </td>
+                    <td class="py-3 px-4">
+                      Commit speaker to a proposition's truth.
+                    </td>
+                    <td class="py-3 px-4 font-mono text-sm">
+                      "There are three flights today."
+                    </td>
+                  </tr>
+                  <tr class="bg-slate-50 border-t">
+                    <td class="py-3 px-4">
+                      <span class="font-semibold">Directive</span>
+                    </td>
+                    <td class="py-3 px-4">
+                      Get addressee to perform an action.
+                    </td>
+                    <td class="py-3 px-4 font-mono text-sm">
+                      "What day do you want to travel?"
+                    </td>
+                  </tr>
+                  <tr class="border-t">
+                    <td class="py-3 px-4">
+                      <span class="font-semibold">Commissive</span>
+                    </td>
+                    <td class="py-3 px-4">
+                      Commit speaker to a future action.
+                    </td>
+                    <td class="py-3 px-4 font-mono text-sm">
+                      "I'll take the 5pm flight."
+                    </td>
+                  </tr>
+                  <tr class="bg-slate-50 border-t">
+                    <td class="py-3 px-4">
+                      <span class="font-semibold">Acknowledgement</span>
+                    </td>
+                    <td class="py-3 px-4">
+                      Express speaker's reaction or state.
+                    </td>
+                    <td class="py-3 px-4 font-mono text-sm">
+                      "OK, thank you."
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <p>
+              <span class="key-term">Grounding:</span> Dialogue is a collective
+              act of establishing shared understanding, or
+              <span class="key-term">common ground</span>. Participants achieve
+              this by acknowledging they have understood an utterance. This can
+              be explicit ("OK") or implicit (incorporating prior information
+              into the next turn).
+            </p>
+            <p>
+              <span class="key-term">Implicature:</span> Human conversation is
+              efficient because we infer meaning beyond what is explicitly said.
+              This is guided by cooperative principles, such as Grice's Maxims
+              (be relevant, truthful, informative, and clear).
+            </p>
+
+            <div class="interactive-box p-6 rounded-lg my-8">
+              <h4 class="text-xl font-semibold mb-2">
+                Test Your Knowledge: Speech Act Identifier
+              </h4>
+              <p class="text-slate-600 mb-4">
+                Identify the speech act for the following utterance. A new
+                question will appear after you answer.
+              </p>
+              <p
+                class="bg-slate-100 p-4 rounded-md text-center text-lg font-medium mb-4"
+              >
+                "<span id="speech-act-utterance"></span>"
+              </p>
+              <div
+                id="speech-act-buttons"
+                class="flex flex-wrap justify-center gap-3"
+              ></div>
+              <div
+                id="speech-act-feedback"
+                class="mt-4 text-center font-medium h-12"
+              ></div>
+            </div>
+          </div>
+        </section>
+
+        <section id="part2">
+          <h2 class="text-3xl font-bold mb-4 pt-8">
+            Part 2: The Art of Conversation: Chatbots
+          </h2>
+          <div class="space-y-4 text-slate-700 leading-relaxed">
+            <p>
+              Chatbots are dialogue systems where the conversation itself is the
+              goal. The classic example is ELIZA, a 1966 program by Joseph
+              Weizenbaum that simulated a psychotherapist. Its architecture,
+              while simple, is foundational to many rule-based bots.
+            </p>
+            <p>
+              ELIZA worked by using
+              <span class="key-term">pattern-matching rules</span>. It had a
+              list of regular expressions and corresponding response templates.
+              When a user's input matched a pattern, ELIZA would transform the
+              captured text (e.g., changing "I am" to "you are") and insert it
+              into a response template, creating a surprisingly effective
+              illusion of understanding.
+            </p>
+
+            <div class="interactive-box p-6 rounded-lg my-8">
+              <h4 class="text-xl font-semibold mb-2">
+                Interactive Demo: Rule-Based Chatbot
+              </h4>
+              <p class="text-slate-600 mb-4">
+                Experience a simple ELIZA-style chatbot. It operates on a small
+                set of pattern-matching rules. Tell it how you feel or what you
+                are thinking about.
+              </p>
+              <div
+                class="flex flex-col h-96 bg-slate-50 border border-slate-200 rounded-lg p-4"
+              >
+                <div
+                  id="chat-history"
+                  class="flex-1 overflow-y-auto mb-4 pr-2 space-y-4"
+                ></div>
+                <div class="flex-shrink-0 flex gap-2">
+                  <input
+                    type="text"
+                    id="chat-input"
+                    class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none"
+                    placeholder="Type your message..."
+                  />
+                  <button
+                    id="send-button"
+                    class="bg-sky-600 text-white font-semibold px-4 py-2 rounded-lg hover:bg-sky-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-sky-500"
+                  >
+                    Send
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="part3">
+          <h2 class="text-3xl font-bold mb-4 pt-8">
+            Part 3: Getting Things Done: Task-Based Systems
+          </h2>
+          <div class="space-y-4 text-slate-700 leading-relaxed">
+            <p>
+              In contrast to chatbots,
+              <span class="key-term">task-based dialogue systems</span> are
+              utilitarian. Their purpose is to help a user achieve a specific
+              goal, such as booking a flight or finding a restaurant. The
+              architecture of these systems is built around completing a task
+              efficiently.
+            </p>
+            <p>
+              The core concept is <span class="key-term">slot-filling</span>.
+              The system has a <span class="key-term">frame</span> representing
+              the user's intent (e.g., `BookFlight`) which contains several
+              <span class="key-term">slots</span>—pieces of information it needs
+              (e.g., `DestinationCity`, `DepartureDate`). The system's job is to
+              ask questions to fill these slots and then execute an action.
+            </p>
+            <h3 class="text-2xl font-semibold pt-4">
+              The Dialogue State Architecture
+            </h3>
+            <p>
+              Modern systems use a sophisticated pipeline to manage this
+              process:
+            </p>
+
+            <div class="bg-white border border-slate-200 rounded-lg p-4 my-4">
+              <div
+                class="flex flex-col md:flex-row items-center justify-between space-y-4 md:space-y-0 md:space-x-2 text-center"
+              >
+                <div class="flex-1 p-3 bg-indigo-50 rounded-lg">
+                  <span class="block font-bold">User Utterance</span>
+                  <span class="text-sm text-slate-600"
+                    >"I want to fly to Berlin"</span
+                  >
+                </div>
+                <span class="font-bold text-2xl text-slate-400">→</span>
+                <div class="flex-1 p-3 bg-sky-50 rounded-lg">
+                  <span class="block font-bold"
+                    >Spoken Language Understanding (SLU)</span
+                  >
+                  <span class="text-sm text-slate-600"
+                    >Intent: BookFlight<br />Slot: DEST=Berlin</span
+                  >
+                </div>
+                <span class="font-bold text-2xl text-slate-400">→</span>
+                <div class="flex-1 p-3 bg-teal-50 rounded-lg">
+                  <span class="block font-bold"
+                    >Dialogue State Tracker (DST)</span
+                  >
+                  <span class="text-sm text-slate-600"
+                    >Updates conversation state</span
+                  >
+                </div>
+                <span class="font-bold text-2xl text-slate-400">→</span>
+                <div class="flex-1 p-3 bg-amber-50 rounded-lg">
+                  <span class="block font-bold">Dialogue Policy</span>
+                  <span class="text-sm text-slate-600"
+                    >Decides next action: ask_date</span
+                  >
+                </div>
+                <span class="font-bold text-2xl text-slate-400">→</span>
+                <div class="flex-1 p-3 bg-rose-50 rounded-lg">
+                  <span class="block font-bold"
+                    >Natural Language Generation (NLG)</span
+                  >
+                  <span class="text-sm text-slate-600"
+                    >Creates response: "What day?"</span
+                  >
+                </div>
+              </div>
+            </div>
+
+            <div class="interactive-box p-6 rounded-lg my-8">
+              <h4 class="text-xl font-semibold mb-2">
+                Interactive Demo: Frame & Slot Visualizer
+              </h4>
+              <p class="text-slate-600 mb-4">
+                See a simplified version of Spoken Language Understanding (SLU).
+                Type a command, and the visualizer will try to parse it into a
+                frame with filled slots.
+              </p>
+              <p class="text-sm text-slate-500 mb-4">
+                Examples: "I want to book a flight to London on Tuesday" or
+                "Order a large pepperoni pizza for two people"
+              </p>
+              <input
+                type="text"
+                id="frame-input"
+                class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none"
+                placeholder="Enter a command..."
+              />
+              <button
+                id="parse-button"
+                class="mt-3 w-full bg-sky-600 text-white font-semibold px-4 py-2 rounded-lg hover:bg-sky-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-sky-500"
+              >
+                Parse Command
+              </button>
+              <div
+                id="frame-visualizer-output"
+                class="mt-4 p-4 bg-slate-50 rounded-md font-mono text-sm min-h-[100px]"
+              ></div>
+            </div>
+          </div>
+        </section>
+
+        <section id="part4">
+          <h2 class="text-3xl font-bold mb-4 pt-8">
+            Part 4: Design, Evaluation, and Ethics
+          </h2>
+          <div class="space-y-4 text-slate-700 leading-relaxed">
+            <p>
+              Building effective dialogue systems goes beyond technical
+              implementation. It requires careful design, rigorous evaluation,
+              and a strong ethical framework.
+            </p>
+            <h3 class="text-2xl font-semibold pt-4">Design and Evaluation</h3>
+            <p>
+              Because dialogue systems are interactive, their design must be
+              guided by Human-Computer Interaction (HCI) principles. A
+              <span class="key-term">user-centered design</span> process is
+              essential, involving studying user needs, building prototypes
+              (often using a <span class="key-term">Wizard-of-Oz</span> setup
+              where a human secretly simulates the AI), and testing iteratively.
+            </p>
+            <p>Evaluation methods differ by system type:</p>
+            <ul class="list-disc list-inside space-y-2 pl-4">
+              <li>
+                <strong>For Chatbots:</strong> Quality is subjective. Evaluation
+                is often manual, relying on user ratings for qualities like
+                <span class="key-term">engagingness</span> or
+                <span class="key-term">humanness</span>. Automated metrics like
+                BLEU are generally poor for this task.
+              </li>
+              <li>
+                <strong>For Task-Based Systems:</strong> Evaluation is more
+                objective. Key metrics include
+                <span class="key-term">task success rate</span> (did the system
+                achieve the goal?),
+                <span class="key-term">user satisfaction</span> (measured via
+                surveys), and the
+                <span class="key-term">slot error rate</span> (how many slots
+                were filled incorrectly?).
+              </li>
+            </ul>
+            <h3 class="text-2xl font-semibold pt-4">Ethical Considerations</h3>
+            <p>
+              As these systems become more integrated into our lives, their
+              potential for harm increases. Designers have a responsibility to
+              consider the ethical implications of their work.
+            </p>
+            <ul class="list-disc list-inside space-y-2 pl-4">
+              <li>
+                <strong>Bias:</strong> Models trained on human data can learn
+                and amplify harmful societal biases. Microsoft's Tay chatbot,
+                which began generating abusive content after interacting with
+                users, is a key cautionary tale.
+              </li>
+              <li>
+                <strong>Privacy:</strong> Voice assistants are "always
+                listening" for a wake word, and users may accidentally disclose
+                sensitive private information.
+              </li>
+              <li>
+                <strong>Safety and Misinformation:</strong> An agent providing
+                incorrect advice in a critical domain like medicine or finance
+                could have severe consequences.
+              </li>
+            </ul>
+            <p>
+              The guiding principle must be
+              <span class="key-term">value sensitive design</span>, a process
+              where designers proactively consider the potential benefits,
+              harms, and stakeholders of a system from the very beginning of the
+              design process.
+            </p>
+          </div>
+        </section>
+      </div>
     </main>
+    <footer class="text-center py-8 mt-12 border-t border-slate-200">
+      <p class="text-sm text-slate-500">End of Topic 9 Learning Module.</p>
+    </footer>
 
     <script>
-      document.addEventListener("DOMContentLoaded", () => {
-        // --- Tooltip for Key Terms ---
-        const tooltip = document.getElementById("tooltip");
-        document.querySelectorAll(".key-term").forEach((term) => {
-          term.addEventListener("mouseenter", (e) => {
-            tooltip.textContent = e.target.dataset.def;
-            tooltip.style.display = "block";
-            const rect = e.target.getBoundingClientRect();
-            tooltip.style.left = `${rect.left}px`;
-            tooltip.style.top = `${rect.bottom + 5 + window.scrollY}px`;
+      document.addEventListener("DOMContentLoaded", function () {
+        // --- Navigation Scroll Spy ---
+        const sections = document.querySelectorAll("section");
+        const navLinks = document.querySelectorAll("#main-header .nav-link");
+
+        const observer = new IntersectionObserver(
+          (entries) => {
+            entries.forEach((entry) => {
+              if (entry.isIntersecting) {
+                navLinks.forEach((link) => {
+                  link.classList.remove("active");
+                  if (
+                    link.getAttribute("href").substring(1) === entry.target.id
+                  ) {
+                    link.classList.add("active");
+                  }
+                });
+              }
+            });
+          },
+          { rootMargin: "-50% 0px -50% 0px", threshold: 0 }
+        );
+
+        sections.forEach((section) => {
+          observer.observe(section);
+        });
+
+        // --- Interactive Element 1: Speech Act Identifier ---
+        const speechActQuizData = [
+          {
+            utterance: "What time is the next train to London?",
+            answer: "Directive",
+            explanation:
+              "This is a question that attempts to get the hearer to perform an action (providing information).",
+          },
+          {
+            utterance: "I'll be there by 5 PM.",
+            answer: "Commissive",
+            explanation:
+              "This commits the speaker to a future course of action (arriving by 5 PM).",
+          },
+          {
+            utterance: "The sky is blue.",
+            answer: "Constative",
+            explanation:
+              "This utterance commits the speaker to the truth of a proposition.",
+          },
+          {
+            utterance: "Great, thanks!",
+            answer: "Acknowledgement",
+            explanation:
+              "This expresses the speaker's reaction and signals understanding.",
+          },
+        ];
+        let currentSpeechActIndex = 0;
+        const speechActUtteranceEl = document.getElementById(
+          "speech-act-utterance"
+        );
+        const speechActButtonsEl =
+          document.getElementById("speech-act-buttons");
+        const speechActFeedbackEl = document.getElementById(
+          "speech-act-feedback"
+        );
+
+        function displaySpeechActQuestion() {
+          const question = speechActQuizData[currentSpeechActIndex];
+          speechActUtteranceEl.textContent = question.utterance;
+          speechActFeedbackEl.innerHTML = "";
+          speechActButtonsEl.innerHTML = "";
+
+          const answers = [
+            "Constative",
+            "Directive",
+            "Commissive",
+            "Acknowledgement",
+          ];
+          answers.forEach((answer) => {
+            const button = document.createElement("button");
+            button.textContent = answer;
+            button.className =
+              "px-4 py-2 bg-slate-200 text-slate-700 rounded-lg hover:bg-slate-300 font-medium";
+            button.onclick = () => checkSpeechAct(answer);
+            speechActButtonsEl.appendChild(button);
           });
-          term.addEventListener("mouseleave", () => {
-            tooltip.style.display = "none";
-          });
+        }
+
+        function checkSpeechAct(selectedAnswer) {
+          const question = speechActQuizData[currentSpeechActIndex];
+          const correctAnswer = question.answer;
+
+          if (selectedAnswer === correctAnswer) {
+            speechActFeedbackEl.innerHTML = `<span class="text-green-600">Correct!</span> <span class="text-slate-500 text-sm">${question.explanation}</span>`;
+          } else {
+            speechActFeedbackEl.innerHTML = `<span class="text-red-600">Incorrect.</span> <span class="text-slate-500 text-sm">The answer is ${correctAnswer}. ${question.explanation}</span>`;
+          }
+
+          currentSpeechActIndex =
+            (currentSpeechActIndex + 1) % speechActQuizData.length;
+          setTimeout(displaySpeechActQuestion, 4000);
+        }
+        displaySpeechActQuestion();
+
+        // --- Interactive Element 2: Rule-Based Chatbot ---
+        const chatHistoryEl = document.getElementById("chat-history");
+        const chatInputEl = document.getElementById("chat-input");
+        const sendButton = document.getElementById("send-button");
+
+        const reflections = {
+          am: "are",
+          was: "were",
+          i: "you",
+          "i'd": "you would",
+          "i've": "you have",
+          "i'll": "you will",
+          my: "your",
+          are: "am",
+          "you've": "I have",
+          "you'll": "I will",
+          your: "my",
+          yours: "mine",
+          you: "me",
+          me: "you",
+        };
+
+        const pairs = [
+          [
+            /hello|hi|hey/i,
+            ["Hello there!", "Hi! What's on your mind?", "Greetings!"],
+          ],
+          [
+            /i am (.*)/i,
+            ["Why do you say you are $1?", "How long have you been $1?"],
+          ],
+          [
+            /i feel (.*)/i,
+            ["Why do you feel $1?", "Tell me more about feeling $1."],
+          ],
+          [/i think (.*)/i, ["Why do you think $1?"]],
+          [
+            /(.*) family(.*)/i,
+            [
+              "Tell me more about your family.",
+              "How do you get along with your family?",
+            ],
+          ],
+          [/quit|bye/i, ["Goodbye! It was nice talking to you.", "Farewell."]],
+          [
+            /(.*)/,
+            [
+              "That's interesting. Please go on.",
+              "I see. And what does that tell you?",
+              "How does that make you feel?",
+            ],
+          ],
+        ];
+
+        function generateBotResponse(userInput) {
+          for (const [pattern, responses] of pairs) {
+            const match = userInput.toLowerCase().match(pattern);
+            if (match) {
+              let response =
+                responses[Math.floor(Math.random() * responses.length)];
+              if (match[1]) {
+                const fragment = match[1];
+                const reflected = fragment
+                  .split(" ")
+                  .map((word) => reflections[word.toLowerCase()] || word)
+                  .join(" ");
+                response = response.replace(/\$1/g, reflected);
+              }
+              return response;
+            }
+          }
+        }
+
+        function appendMessage(text, sender) {
+          const messageDiv = document.createElement("div");
+          messageDiv.className = `chat-message ${sender}-message`;
+          const bubble = document.createElement("div");
+          bubble.className = "bubble px-4 py-2 rounded-xl";
+          bubble.textContent = text;
+          messageDiv.appendChild(bubble);
+          chatHistoryEl.appendChild(messageDiv);
+          chatHistoryEl.scrollTop = chatHistoryEl.scrollHeight;
+        }
+
+        function handleUserChatInput() {
+          const userInput = chatInputEl.value.trim();
+          if (!userInput) return;
+
+          appendMessage(userInput, "user");
+          chatInputEl.value = "";
+
+          setTimeout(() => {
+            const botResponse = generateBotResponse(userInput);
+            appendMessage(botResponse, "bot");
+          }, 600 + Math.random() * 400);
+        }
+
+        sendButton.addEventListener("click", handleUserChatInput);
+        chatInputEl.addEventListener("keydown", (e) => {
+          if (e.key === "Enter") handleUserChatInput();
+        });
+        appendMessage(
+          "Hello. I'm a simple bot. Tell me what's on your mind.",
+          "bot"
+        );
+
+        // --- Interactive Element 3: Frame & Slot Visualizer ---
+        const frameInputEl = document.getElementById("frame-input");
+        const parseButton = document.getElementById("parse-button");
+        const frameOutputEl = document.getElementById(
+          "frame-visualizer-output"
+        );
+
+        function visualizeFrame() {
+          const text = frameInputEl.value.trim().toLowerCase();
+          let frame = { name: "Unknown", slots: {} };
+
+          if (text.includes("flight") || text.includes("fly")) {
+            frame.name = "BookFlight";
+            frame.slots = {
+              DESTINATION: null,
+              DEPART_DATE: null,
+              DEPART_LOC: null,
+            };
+            const toMatch = text.match(/to\s+([a-z\s]+)(?=\s+on|\s+from|$)/);
+            if (toMatch) frame.slots.DESTINATION = toMatch[1].trim();
+            const fromMatch = text.match(/from\s+([a-z\s]+)(?=\s+to|\s+on|$)/);
+            if (fromMatch) frame.slots.DEPART_LOC = fromMatch[1].trim();
+            const onMatch = text.match(/on\s+([a-z0-9\s]+)(?=\s+to|\s+from|$)/);
+            if (onMatch) frame.slots.DEPART_DATE = onMatch[1].trim();
+          } else if (text.includes("pizza") || text.includes("order")) {
+            frame.name = "OrderPizza";
+            frame.slots = { SIZE: null, TOPPING: null, QUANTITY: null };
+            const sizeMatch = text.match(/(large|medium|small)/);
+            if (sizeMatch) frame.slots.SIZE = sizeMatch[0];
+            const toppingMatch = text.match(
+              /(pepperoni|margherita|vegetarian|hawaiian)/
+            );
+            if (toppingMatch) frame.slots.TOPPING = toppingMatch[0];
+            const quantityMatch = text.match(
+              /(\d+|one|two|three)\s+(pizza|people)/
+            );
+            if (quantityMatch) frame.slots.QUANTITY = quantityMatch[1];
+          } else if (text.length > 0) {
+            frameOutputEl.innerHTML =
+              'Could not determine domain. Try a command with "flight" or "pizza".';
+            return;
+          } else {
+            frameOutputEl.innerHTML = "";
+            return;
+          }
+
+          let outputHtml = `<div class="font-bold mb-2">FRAME: <span class="text-indigo-600">${frame.name}</span></div>`;
+          outputHtml += '<div>SLOTS:</div><div class="pl-4 mt-1 space-y-1">';
+          for (const [slot, value] of Object.entries(frame.slots)) {
+            outputHtml += `<div><span class="text-slate-500">${slot}:</span> `;
+            if (value) {
+              outputHtml += `<span class="font-semibold text-green-700">"${value}"</span>`;
+            } else {
+              outputHtml += `<span class="font-semibold text-red-600">null</span>`;
+            }
+            outputHtml += `</div>`;
+          }
+          outputHtml += "</div>";
+          frameOutputEl.innerHTML = outputHtml;
+        }
+
+        parseButton.addEventListener("click", visualizeFrame);
+        frameInputEl.addEventListener("keydown", (e) => {
+          if (e.key === "Enter") visualizeFrame();
         });
 
         // --- Audio Speed Control ---

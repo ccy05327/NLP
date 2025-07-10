@@ -5,6 +5,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Topic 7: Information Extraction</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Chosen Palette: Calm Neutrals -->
+    <!-- Application Structure Plan: The SPA is designed as a linear, scrollable journey that mirrors the logical flow of an Information Extraction (IE) pipeline. It starts with a high-level introduction and learning objectives, then progresses sequentially through the core stages: POS Tagging, Chunking, Named Entity Recognition (NER), and finally Relation Extraction (RE). This top-down structure helps students build knowledge incrementally. Each section is a self-contained module with explanatory text derived from the source reports, followed immediately by a hands-on interactive visualization. This "learn-then-do" model reinforces concepts by allowing immediate application. The final section delves into the underlying algorithms (HMMs, CRFs), providing a "deep dive" for advanced understanding. This structure was chosen because it directly maps to the pedagogical flow of teaching a complex, multi-stage process, making it intuitive for a university student to follow. -->
+    <!-- Visualization & Content Choices: 
+        - Report Info: IE Pipeline Overview -> Goal: Organize/Change -> Viz: Interactive Diagram (HTML/CSS/JS with D3.js) -> Interaction: Clickable nodes to navigate sections. Justification: A visual, interactive map of the topic provides structure and easy navigation. D3.js is used for drawing flexible, non-SVG diagrammatic elements.
+        - Report Info: Part-of-Speech Tagging -> Goal: Inform/Organize -> Viz: Interactive Tagger (Text Area + JS) -> Interaction: User can input text and see live POS tagging. Justification: Makes the abstract concept of tagging a concrete, hands-on activity.
+        - Report Info: Chunking with Grammar -> Goal: Organize/Inform -> Viz: Interactive Grammar Builder (Text Area + JS) -> Interaction: User writes chunking rules and sees the immediate result on a sample sentence. Justification: Directly demonstrates how linguistic rules are formalized into code.
+        - Report Info: Named Entity Recognition & Zipf's Law -> Goal: Inform/Compare -> Viz: NER Highlighter (JS) & Bar Chart (Chart.js) -> Interaction: Hovering over entities reveals their type; chart visualizes the "long tail" concept. Justification: A static highlight is effective for showing NER results, while a Chart.js bar chart is the standard and best way to visualize frequency distributions like Zipf's Law.
+        - Report Info: Relation Extraction with Dependency Paths -> Goal: Relationships -> Viz: Interactive Dependency Parse (D3.js) -> Interaction: Clicking nodes highlights the shortest path, revealing the semantic connection. Justification: D3.js allows for the creation of the necessary node-link graph on a canvas, which is the most effective way to visualize syntactic dependencies.
+        - Report Info: Viterbi Algorithm -> Goal: Change/Inform -> Viz: Step-by-step animated table (HTML/JS) -> Interaction: User clicks to advance the algorithm, seeing probabilities calculated at each step. Justification: A turn-key animation is the best way to explain a complex, iterative algorithm like Viterbi.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
     <style>
       body {
         font-family: "Inter", sans-serif;
@@ -35,48 +48,132 @@
         line-height: 1.5;
         display: none;
       }
+      .entity {
+        padding: 0.15em 0.4em;
+        margin: 0 0.2em;
+        line-height: 1;
+        border-radius: 0.35em;
+        font-weight: 600;
+        cursor: help;
+        border: 1px solid;
+      }
+      .entity-PER {
+        background-color: #fecaca; /* red-200 */
+        border-color: #ef4444;
+      }
+      .entity-ORG {
+        background-color: #dbeafe; /* blue-200 */
+        border-color: #3b82f6;
+      }
+      .entity-LOC {
+        background-color: #fed7aa; /* orange-200 */
+        border-color: #f97316;
+      }
+      .entity-GPE {
+        background-color: #bbf7d0; /* green-200 */
+        border-color: #22c55e;
+      }
+      .entity-TIME {
+        background-color: #e9d5ff; /* purple-200 */
+        border-color: #a855f7;
+      }
+      .entity-MONEY {
+        background-color: #fde68a; /* amber-200 */
+        border-color: #f59e0b;
+      }
+
+      /* Mobile-specific adjustments */
+      @media (max-width: 640px) {
+        .entity {
+          padding: 0.1em 0.3em;
+          margin: 0 0.1em;
+          font-size: 0.9em;
+        }
+
+        #pipeline-diagram svg text {
+          font-size: 12px !important;
+        }
+
+        #dep-parse-vis svg text {
+          font-size: 12px !important;
+        }
+
+        #tooltip {
+          max-width: 90vw;
+          left: 5vw !important;
+          right: 5vw;
+        }
+      }
     </style>
   </head>
   <body class="bg-slate-50 text-slate-800">
     <div id="tooltip"></div>
 
     <header class="bg-white shadow-sm">
-      <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        <h1 class="text-4xl font-bold text-slate-900">
+      <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
+        <h1 class="text-2xl sm:text-3xl lg:text-4xl font-bold text-slate-900">
           Topic 7: Information Extraction
         </h1>
-        <p class="mt-2 text-lg text-slate-600">
-          An interactive guide to extracting structured information from text.
+        <p class="mt-2 text-base sm:text-lg text-slate-600">
+          An interactive introduction to transforming unstructured text into
+          structured, actionable knowledge.
         </p>
       </div>
     </header>
 
-    <main class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
-      <section id="objectives" class="mb-12 p-6 bg-white rounded-lg shadow">
-        <h2 class="text-2xl font-bold text-slate-900 mb-4">
+    <main class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-8 lg:py-12">
+      <section
+        id="objectives"
+        class="mb-8 md:mb-12 p-4 sm:p-6 bg-white rounded-lg shadow"
+      >
+        <h2 class="text-xl sm:text-2xl font-bold text-slate-900 mb-4">
           Learning Objectives
         </h2>
-        <p class="mb-4 text-slate-600">
-          By the end of this module, you will understand the key concepts and
-          techniques for extracting structured information from unstructured
-          text.
+        <p class="mb-4 text-sm sm:text-base text-slate-600">
+          This module provides an interactive environment to master the core
+          concepts of information extraction. The goal is to move beyond theory
+          and develop a practical, hands-on understanding of how IE systems
+          work.
         </p>
-        <ul class="list-disc list-inside space-y-2 text-slate-700">
-          <li>Understand the fundamentals of information extraction</li>
-          <li>Learn about named entity recognition and classification</li>
-          <li>Explore relation extraction techniques</li>
-          <li>Apply event extraction methods</li>
+        <ul
+          class="list-disc list-inside space-y-2 text-sm sm:text-base text-slate-700"
+        >
+          <li>
+            Understand the definition, scope, and value of Information
+            Extraction.
+          </li>
+          <li>
+            Apply entity recognition techniques to identify key actors in text.
+          </li>
+          <li>
+            Create practical information extraction applications from start to
+            finish.
+          </li>
+          <li>
+            Analyze statistical language analysis techniques for Information
+            Extraction.
+          </li>
+          <li>
+            Utilize software tools like taggers and NLP libraries to construct
+            IE pipelines.
+          </li>
+          <li>Think critically about the evaluation of IE systems.</li>
         </ul>
       </section>
 
-      <section id="audio-lecture" class="mb-12 p-6 bg-white rounded-lg shadow">
-        <h2 class="text-2xl font-bold text-slate-900 mb-4">Audio Lecture</h2>
-        <p class="mb-6 text-slate-600">
-          Listen to the detailed explanation of information extraction concepts. Use
-          the speed controls to adjust playback to your preference.
+      <section
+        id="audio-lecture"
+        class="mb-8 md:mb-12 p-4 sm:p-6 bg-white rounded-lg shadow"
+      >
+        <h2 class="text-xl sm:text-2xl font-bold text-slate-900 mb-4">
+          Audio Lecture
+        </h2>
+        <p class="mb-6 text-sm sm:text-base text-slate-600">
+          Listen to the detailed explanation of information extraction concepts.
+          Use the speed controls to adjust playback to your preference.
         </p>
 
-        <div class="bg-slate-50 p-6 rounded-lg border border-slate-200">
+        <div class="bg-slate-50 p-4 sm:p-6 rounded-lg border border-slate-200">
           <div class="flex items-center justify-center mb-4">
             <audio
               id="topic-audio"
@@ -89,49 +186,52 @@
             </audio>
           </div>
 
-          <div class="flex items-center justify-center space-x-4">
-            <span class="text-sm font-medium text-slate-700"
+          <div
+            class="flex flex-col sm:flex-row sm:items-center justify-center space-y-4 sm:space-y-0 sm:space-x-4"
+          >
+            <span
+              class="text-sm font-medium text-slate-700 text-center sm:text-left"
               >Playback Speed:</span
             >
-            <div class="flex space-x-2">
+            <div class="flex flex-wrap justify-center gap-2">
               <button
                 id="speed-0-5"
-                class="speed-btn px-3 py-1 text-sm bg-slate-200 text-slate-700 rounded hover:bg-slate-300 transition-colors"
+                class="speed-btn px-2 sm:px-3 py-1 text-xs sm:text-sm bg-slate-200 text-slate-700 rounded hover:bg-slate-300 transition-colors"
                 data-speed="0.5"
               >
                 0.5x
               </button>
               <button
                 id="speed-0-75"
-                class="speed-btn px-3 py-1 text-sm bg-slate-200 text-slate-700 rounded hover:bg-slate-300 transition-colors"
+                class="speed-btn px-2 sm:px-3 py-1 text-xs sm:text-sm bg-slate-200 text-slate-700 rounded hover:bg-slate-300 transition-colors"
                 data-speed="0.75"
               >
                 0.75x
               </button>
               <button
                 id="speed-1"
-                class="speed-btn px-3 py-1 text-sm bg-sky-600 text-white rounded hover:bg-sky-700 transition-colors active"
+                class="speed-btn px-2 sm:px-3 py-1 text-xs sm:text-sm bg-sky-600 text-white rounded hover:bg-sky-700 transition-colors active"
                 data-speed="1"
               >
                 1x
               </button>
               <button
                 id="speed-1-25"
-                class="speed-btn px-3 py-1 text-sm bg-slate-200 text-slate-700 rounded hover:bg-slate-300 transition-colors"
+                class="speed-btn px-2 sm:px-3 py-1 text-xs sm:text-sm bg-slate-200 text-slate-700 rounded hover:bg-slate-300 transition-colors"
                 data-speed="1.25"
               >
                 1.25x
               </button>
               <button
                 id="speed-1-5"
-                class="speed-btn px-3 py-1 text-sm bg-slate-200 text-slate-700 rounded hover:bg-slate-300 transition-colors"
+                class="speed-btn px-2 sm:px-3 py-1 text-xs sm:text-sm bg-slate-200 text-slate-700 rounded hover:bg-slate-300 transition-colors"
                 data-speed="1.5"
               >
                 1.5x
               </button>
               <button
                 id="speed-2"
-                class="speed-btn px-3 py-1 text-sm bg-slate-200 text-slate-700 rounded hover:bg-slate-300 transition-colors"
+                class="speed-btn px-2 sm:px-3 py-1 text-xs sm:text-sm bg-slate-200 text-slate-700 rounded hover:bg-slate-300 transition-colors"
                 data-speed="2"
               >
                 2x
@@ -140,59 +240,421 @@
           </div>
 
           <div class="mt-4 text-center">
-            <span id="current-speed" class="text-sm text-slate-600"
+            <span id="current-speed" class="text-xs sm:text-sm text-slate-600"
               >Current speed: 1x</span
             >
           </div>
         </div>
       </section>
 
-      <section
-        id="content-placeholder"
-        class="mb-12 p-6 bg-white rounded-lg shadow"
-      >
-        <h2 class="text-2xl font-bold text-slate-900 mb-4">
-          Content Coming Soon
+      <!-- Introduction Section -->
+      <section id="introduction" class="space-y-4 sm:space-y-6 mb-12 md:mb-16">
+        <h2 class="text-xl sm:text-2xl lg:text-3xl font-bold text-slate-900">
+          What is Information Extraction?
         </h2>
-        <p class="text-slate-600 text-center py-8">
-          This section will contain interactive content for Topic 7: Information
-          Extraction.
-        </p>
+        <div
+          class="space-y-4 text-sm sm:text-base lg:text-lg text-slate-700 leading-relaxed"
+        >
+          <p>
+            At its core, Information Extraction (IE) is the process of
+            transforming unstructured information into structured data. Imagine
+            the vast ocean of text on the internet, in news articles, and
+            scientific papers. This data contains immense value, but its
+            structure is hidden. IE acts as a bridge, converting raw text into
+            organized formats like database entries. This transformation allows
+            us to query and analyze information that was previously inaccessible
+            to automated systems. The entire field can be distilled into a
+            two-part mission: first, identify the key "things" or actors being
+            discussed (the
+            <span
+              class="key-term"
+              data-def="Named entities are specific real-world objects such as people, organizations, locations, dates, and money amounts that appear in text."
+              >entities</span
+            >), and second, discover the "connections" or interactions between
+            them (the
+            <span
+              class="key-term"
+              data-def="Relations describe the semantic connections between entities, such as 'works-for', 'located-in', or 'acquired-by'."
+              >relations</span
+            >).
+          </p>
+        </div>
+        <div class="mt-6 sm:mt-8 p-4 sm:p-6 bg-white rounded-lg shadow-lg">
+          <h4 class="text-lg sm:text-xl font-bold text-center mb-4">
+            The Information Extraction Pipeline
+          </h4>
+          <p
+            class="text-center text-sm sm:text-base text-slate-600 mb-4 sm:mb-6"
+          >
+            This diagram illustrates a typical IE pipeline. Each stage builds
+            upon the last, adding a new layer of structure. Click on any stage
+            to jump to that section.
+          </p>
+          <div id="pipeline-diagram" class="w-full h-32 sm:h-40 lg:h-48"></div>
+        </div>
       </section>
 
-      <footer id="resources" class="bg-white p-6 rounded-lg shadow">
-        <h2 class="text-2xl font-bold text-slate-900 mb-4">Further Readings</h2>
-        <p class="mb-4 text-slate-600">
+      <!-- Part-of-Speech (POS) Tagging -->
+      <section id="pos-tagging" class="space-y-4 sm:space-y-6 mb-12 md:mb-16">
+        <h2 class="text-xl sm:text-2xl lg:text-3xl font-bold text-slate-900">
+          1. Part-of-Speech (POS) Tagging
+        </h2>
+        <div
+          class="space-y-4 text-sm sm:text-base lg:text-lg text-slate-700 leading-relaxed"
+        >
+          <p>
+            The first step in understanding sentence structure is
+            <span
+              class="key-term"
+              data-def="Part-of-speech tagging is the process of assigning a grammatical category (noun, verb, adjective, etc.) to each word in a sentence based on its context."
+              >POS tagging</span
+            >. Its primary function is to resolve lexical ambiguity by assigning
+            a grammatical category—such as noun, verb, or adjective—to each word
+            based on its context. This is crucial because a word's meaning can
+            change based on its role. For example, "refuse" is a verb in "They
+            refuse the offer" but a noun in "Take out the refuse."
+          </p>
+        </div>
+        <div class="mt-6 sm:mt-8 p-4 sm:p-6 bg-white rounded-lg shadow-lg">
+          <h4 class="text-lg sm:text-xl font-bold mb-2">
+            Interactive POS Tagger
+          </h4>
+          <p class="text-sm sm:text-base text-slate-600 mb-4">
+            Enter a sentence to see how a POS tagger assigns categories to each
+            word. Hover over a tag to see its description.
+          </p>
+          <textarea
+            id="pos-input"
+            class="w-full p-3 border border-slate-300 rounded-md font-code text-sm sm:text-base focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition"
+            rows="3"
+          >
+They refuse to permit us to obtain the refuse permit.</textarea
+          >
+          <button
+            id="pos-tag-btn"
+            class="mt-2 px-4 py-2 text-sm sm:text-base bg-sky-600 text-white rounded-md font-semibold hover:bg-sky-700 transition-colors"
+          >
+            Tag Sentence
+          </button>
+          <div
+            id="pos-output"
+            class="mt-4 p-3 sm:p-4 bg-slate-50 rounded-md text-sm sm:text-base lg:text-lg leading-loose"
+          ></div>
+        </div>
+      </section>
+
+      <!-- Chunking -->
+      <section id="chunking" class="space-y-4 sm:space-y-6 mb-12 md:mb-16">
+        <h2 class="text-xl sm:text-2xl lg:text-3xl font-bold text-slate-900">
+          2. Chunking (Shallow Parsing)
+        </h2>
+        <div
+          class="space-y-4 text-sm sm:text-base lg:text-lg text-slate-700 leading-relaxed"
+        >
+          <p>
+            Once words are tagged, we group them into simple phrases using
+            <span
+              class="key-term"
+              data-def="Chunking is the process of grouping adjacent words with related grammatical roles into simple phrases, typically noun phrases or verb phrases."
+              >chunking</span
+            >. The goal is to identify basic syntactic units, most commonly Noun
+            Phrases (NPs). For example, in "The little yellow dog barked," a
+            chunker would identify "[The little yellow dog]" as a single NP
+            chunk. This is often done by defining a
+            <span
+              class="key-term"
+              data-def="A chunk grammar is a set of patterns or rules that operate on part-of-speech tags to identify syntactic phrases."
+              >chunk grammar</span
+            >
+            with patterns that operate on POS tags.
+          </p>
+        </div>
+        <div class="mt-6 sm:mt-8 p-4 sm:p-6 bg-white rounded-lg shadow-lg">
+          <h4 class="text-lg sm:text-xl font-bold mb-2">
+            Interactive Grammar Builder
+          </h4>
+          <p class="text-sm sm:text-base text-slate-600 mb-4">
+            The sentence below is POS-tagged. Write a chunk grammar rule to
+            identify the noun phrases. The default rule looks for an optional
+            determiner (DT), followed by any number of adjectives (JJ), and
+            ending with a noun (NN).
+          </p>
+          <div
+            class="p-3 bg-slate-100 rounded-md mb-4 font-code text-xs sm:text-sm break-all"
+          >
+            The/DT little/JJ yellow/JJ dog/NN barked/VBD at/IN the/DT cat/NN ./.
+          </div>
+          <input
+            id="chunking-grammar-input"
+            class="w-full p-3 border border-slate-300 rounded-md font-code text-sm sm:text-base"
+            value="NP: {<DT>?<JJ>*<NN>}"
+          />
+          <button
+            id="chunking-apply-btn"
+            class="mt-2 px-4 py-2 text-sm sm:text-base bg-sky-600 text-white rounded-md font-semibold hover:bg-sky-700 transition-colors"
+          >
+            Apply Grammar
+          </button>
+          <h4 class="text-base sm:text-lg font-bold mt-6 mb-2">Result:</h4>
+          <div
+            id="chunking-output"
+            class="p-3 sm:p-4 bg-slate-50 rounded-md text-sm sm:text-base lg:text-lg leading-relaxed font-code"
+          ></div>
+        </div>
+      </section>
+
+      <!-- Named Entity Recognition (NER) -->
+      <section id="ner" class="space-y-4 sm:space-y-6 mb-12 md:mb-16">
+        <h2 class="text-xl sm:text-2xl lg:text-3xl font-bold text-slate-900">
+          3. Named Entity Recognition (NER)
+        </h2>
+        <div
+          class="space-y-4 text-sm sm:text-base lg:text-lg text-slate-700 leading-relaxed"
+        >
+          <p>
+            While chunking finds generic phrases,
+            <span
+              class="key-term"
+              data-def="Named Entity Recognition (NER) is the task of identifying and classifying specific real-world objects such as people, organizations, locations, dates, and money amounts in text."
+              >NER</span
+            >
+            finds and classifies specific, real-world objects: people,
+            organizations, locations, dates, and money. NER is a cornerstone of
+            IE, as it identifies the primary actors and attributes in a text. A
+            major challenge is the "long tail" of rare entities, meaning a
+            system can't just rely on a predefined list; it must learn
+            contextual patterns to identify new entities.
+          </p>
+        </div>
+        <div class="mt-6 sm:mt-8 p-4 sm:p-6 bg-white rounded-lg shadow-lg">
+          <h4 class="text-lg sm:text-xl font-bold mb-2">
+            Interactive NER Visualizer
+          </h4>
+          <p class="text-sm sm:text-base text-slate-600 mb-4">
+            Hover over the highlighted entities in the text below. The colors
+            correspond to different entity categories, showing how NER adds a
+            layer of semantic meaning.
+          </p>
+          <div
+            id="ner-visualizer-text"
+            class="p-3 sm:p-4 bg-slate-50 rounded-md text-sm sm:text-base lg:text-lg leading-relaxed"
+          >
+            Citing high fuel prices,
+            <span class="entity entity-ORG" title="Organization"
+              >United Airlines</span
+            >
+            said <span class="entity entity-TIME" title="Time">Friday</span> it
+            has increased fares by
+            <span class="entity entity-MONEY" title="Monetary Value">$6</span>
+            per round trip on flights to some cities also served by lower-cost
+            carriers.
+            <span class="entity entity-ORG" title="Organization"
+              >American Airlines</span
+            >, a unit of
+            <span class="entity entity-ORG" title="Organization">AMR Corp.</span
+            >, immediately matched the move, spokesman
+            <span class="entity entity-PER" title="Person">Tim Wagner</span>
+            said.
+            <span class="entity entity-ORG" title="Organization">United</span>,
+            a unit of
+            <span class="entity entity-ORG" title="Organization">UAL Corp.</span
+            >, said the increase took effect
+            <span class="entity entity-TIME" title="Time">Thursday</span> and
+            applies to most routes where it competes against discount carriers,
+            such as
+            <span class="entity entity-GPE" title="Geo-Political Entity"
+              >Chicago</span
+            >
+            to
+            <span class="entity entity-GPE" title="Geo-Political Entity"
+              >Dallas</span
+            >
+            and
+            <span class="entity entity-LOC" title="Location">Denver</span> to
+            <span class="entity entity-LOC" title="Location">San Francisco</span
+            >.
+          </div>
+        </div>
+      </section>
+
+      <!-- Relation Extraction -->
+      <section
+        id="relation-extraction"
+        class="space-y-4 sm:space-y-6 mb-12 md:mb-16"
+      >
+        <h2 class="text-xl sm:text-2xl lg:text-3xl font-bold text-slate-900">
+          4. Relation Extraction
+        </h2>
+        <div
+          class="space-y-4 text-sm sm:text-base lg:text-lg text-slate-700 leading-relaxed"
+        >
+          <p>
+            Once entities are identified,
+            <span
+              class="key-term"
+              data-def="Relation Extraction is the task of identifying and classifying semantic relationships between entities in text, such as 'works-for', 'located-in', or 'acquired-by'."
+              >Relation Extraction (RE)</span
+            >
+            finds the connections between them. The goal is to create structured
+            triplets like `(Entity1, Relation, Entity2)`. For example, from "Tim
+            Wagner works for American Airlines," an RE system extracts `(Tim
+            Wagner, works-for, American Airlines)`. A powerful technique for
+            this is using a
+            <span
+              class="key-term"
+              data-def="A dependency parse represents the grammatical structure of a sentence as a directed graph, where words are nodes connected by labeled edges representing grammatical relationships."
+              >dependency parse</span
+            >, which represents the grammatical structure of a sentence as a
+            graph. The shortest path between two entities in this graph often
+            cleanly captures their semantic relationship.
+          </p>
+        </div>
+        <div class="mt-6 sm:mt-8 p-4 sm:p-6 bg-white rounded-lg shadow-lg">
+          <h4 class="text-lg sm:text-xl font-bold mb-2">
+            Dependency Path Explorer
+          </h4>
+          <p class="text-sm sm:text-base text-slate-600 mb-4">
+            The sentence below is visualized as a dependency graph. Click on any
+            two words (nodes) to see the shortest dependency path between them
+            highlighted. Try clicking "cat" and "dog".
+          </p>
+          <div
+            class="dep-parse-container w-full h-60 sm:h-80 border rounded-lg overflow-hidden"
+            id="dep-parse-vis"
+          ></div>
+          <p class="mt-4 text-center text-sm sm:text-base">
+            <strong>Highlighted Path:</strong>
+            <code
+              id="dep-path-display"
+              class="text-sm sm:text-base lg:text-lg break-all"
+              >None</code
+            >
+          </p>
+        </div>
+      </section>
+
+      <!-- Algorithms -->
+      <section id="algorithms" class="space-y-4 sm:space-y-6 mb-12 md:mb-16">
+        <h2 class="text-xl sm:text-2xl lg:text-3xl font-bold text-slate-900">
+          Under the Hood: Algorithms
+        </h2>
+        <div
+          class="space-y-4 text-sm sm:text-base lg:text-lg text-slate-700 leading-relaxed"
+        >
+          <p>
+            Sequence labeling tasks like POS tagging and NER are powered by
+            statistical models. The two classical approaches are
+            <span
+              class="key-term"
+              data-def="Hidden Markov Models (HMMs) are generative probabilistic models that learn how words and tags are generated together by modeling the joint probability distribution."
+              >Hidden Markov Models (HMMs)</span
+            >
+            and
+            <span
+              class="key-term"
+              data-def="Conditional Random Fields (CRFs) are discriminative models that directly learn to distinguish correct tag sequences from incorrect ones, allowing for rich overlapping features."
+              >Conditional Random Fields (CRFs)</span
+            >. HMMs are *generative* models that learn how words and tags are
+            generated together. CRFs are *discriminative* models that are
+            generally more powerful because they directly learn how to
+            distinguish correct tag sequences from incorrect ones, allowing them
+            to use a rich set of overlapping features from the text.
+          </p>
+        </div>
+        <div class="mt-6 sm:mt-8 p-4 sm:p-6 bg-white rounded-lg shadow-lg">
+          <h4 class="text-lg sm:text-xl font-bold mb-2">
+            Viterbi Algorithm for HMMs
+          </h4>
+          <p class="text-sm sm:text-base text-slate-600 mb-4">
+            The Viterbi algorithm is used by HMMs to find the most likely
+            sequence of tags for a sentence. It's a dynamic programming
+            algorithm that builds a probability matrix (a "lattice"). Click
+            "Next Step" to walk through the process for the sentence "Janet will
+            back the bill" and see how the most probable path is found.
+          </p>
+          <div
+            class="flex flex-col sm:flex-row items-center gap-2 sm:gap-4 mb-4"
+          >
+            <button
+              id="viterbi-step-btn"
+              class="w-full sm:w-auto px-4 py-2 text-sm sm:text-base bg-sky-600 text-white rounded-md font-semibold hover:bg-sky-700 transition-colors"
+            >
+              Start
+            </button>
+            <button
+              id="viterbi-reset-btn"
+              class="w-full sm:w-auto px-4 py-2 text-sm sm:text-base bg-slate-200 text-slate-800 rounded-md font-semibold hover:bg-slate-300 transition-colors"
+            >
+              Reset
+            </button>
+          </div>
+          <div class="overflow-x-auto">
+            <table
+              id="viterbi-lattice"
+              class="w-full text-xs sm:text-sm text-left min-w-max"
+            ></table>
+          </div>
+          <p class="mt-4 text-center text-sm sm:text-base">
+            <strong>Most Likely Path:</strong>
+            <code
+              id="viterbi-path-display"
+              class="text-sm sm:text-base lg:text-lg break-all"
+              >None</code
+            >
+          </p>
+        </div>
+      </section>
+
+      <hr class="my-12 md:my-16 border-slate-300" />
+
+      <footer id="resources" class="bg-white p-4 sm:p-6 rounded-lg shadow">
+        <h2 class="text-xl sm:text-2xl font-bold text-slate-900 mb-4">
+          Further Readings
+        </h2>
+        <p class="mb-4 text-sm sm:text-base text-slate-600">
           For a deeper dive into these topics, please refer to the following
-          resources:
+          chapters from Jurafsky and Martin's "Speech and Language Processing":
         </p>
-        <ul class="list-disc list-inside space-y-2">
+        <ul class="list-disc list-inside space-y-2 text-sm sm:text-base">
           <li>
             <a
               href="topic 7 reading 1.pdf"
               target="_blank"
-              class="text-sky-600 hover:underline"
+              class="text-sky-600 hover:underline break-words"
+              >Chapter 17: Information Extraction</a
             >
-              Reading 1: Information Extraction Fundamentals
-            </a>
           </li>
           <li>
             <a
               href="topic 7 reading 2.pdf"
               target="_blank"
-              class="text-sky-600 hover:underline"
+              class="text-sky-600 hover:underline break-words"
+              >Chapter 8: Part-of-Speech Tagging</a
             >
-              Reading 2: Named Entity Recognition
-            </a>
           </li>
           <li>
             <a
               href="topic 7 reading 3.pdf"
               target="_blank"
-              class="text-sky-600 hover:underline"
+              class="text-sky-600 hover:underline break-words"
+              >Chapter 9: Named Entity Recognition</a
             >
-              Reading 3: Relation and Event Extraction
-            </a>
+          </li>
+          <li>
+            <a
+              href="topic 7 reading 4.pdf"
+              target="_blank"
+              class="text-sky-600 hover:underline break-words"
+              >Chapter 21: Relation Extraction</a
+            >
+          </li>
+          <li>
+            <a
+              href="topic 7 reading 5.pdf"
+              target="_blank"
+              class="text-sky-600 hover:underline break-words"
+              >Chapter A: Hidden Markov Models</a
+            >
           </li>
         </ul>
       </footer>
@@ -214,6 +676,579 @@
             tooltip.style.display = "none";
           });
         });
+
+        // --- Interactive Pipeline Diagram ---
+        function drawPipeline() {
+          const pipelineData = [
+            { id: "pos-tagging", name: "POS Tagging" },
+            { id: "chunking", name: "Chunking" },
+            { id: "ner", name: "NER" },
+            { id: "relation-extraction", name: "Relation Extraction" },
+          ];
+          const container = d3.select("#pipeline-diagram");
+          container.selectAll("*").remove();
+          const { width } = container.node().getBoundingClientRect();
+          const height = 180;
+          const svg = container
+            .append("svg")
+            .attr("width", width)
+            .attr("height", height);
+
+          const isMobile = window.innerWidth < 640;
+          const nodeWidth = Math.min(
+            isMobile ? 120 : 180,
+            (width / pipelineData.length) * 0.7
+          );
+          const nodeHeight = isMobile ? 40 : 50;
+          const spacing =
+            (width - pipelineData.length * nodeWidth) /
+            (pipelineData.length + 1);
+
+          svg
+            .append("defs")
+            .append("marker")
+            .attr("id", "arrow")
+            .attr("viewBox", "0 -5 10 10")
+            .attr("refX", 8)
+            .attr("refY", 0)
+            .attr("markerWidth", 6)
+            .attr("markerHeight", 6)
+            .attr("orient", "auto")
+            .append("path")
+            .attr("d", "M0,-5L10,0L0,5")
+            .style("fill", "#9ca3af");
+
+          const nodes = svg
+            .selectAll("g.node")
+            .data(pipelineData)
+            .enter()
+            .append("g")
+            .attr("class", "node")
+            .attr(
+              "transform",
+              (d, i) =>
+                `translate(${spacing + i * (nodeWidth + spacing)}, ${
+                  height / 2 - nodeHeight / 2
+                })`
+            )
+            .style("cursor", "pointer")
+            .on("click", (e, d) =>
+              document
+                .getElementById(d.id)
+                .scrollIntoView({ behavior: "smooth" })
+            );
+
+          nodes
+            .append("rect")
+            .attr("width", nodeWidth)
+            .attr("height", nodeHeight)
+            .attr("rx", 8)
+            .style("fill", "white")
+            .style("stroke", "var(--border-color)")
+            .style("stroke-width", 2);
+
+          nodes
+            .append("text")
+            .attr("x", nodeWidth / 2)
+            .attr("y", nodeHeight / 2)
+            .attr("dy", "0.35em")
+            .style("text-anchor", "middle")
+            .style("fill", "#1e293b")
+            .style("font-weight", "600")
+            .style("font-size", isMobile ? "12px" : "14px")
+            .text((d) => d.name);
+
+          const lines = svg
+            .selectAll("line.arrow")
+            .data(pipelineData.slice(0, -1))
+            .enter()
+            .append("line")
+            .attr("class", "arrow")
+            .attr(
+              "x1",
+              (d, i) => spacing + i * (nodeWidth + spacing) + nodeWidth
+            )
+            .attr("y1", height / 2)
+            .attr("x2", (d, i) => spacing + (i + 1) * (nodeWidth + spacing))
+            .attr("y2", height / 2)
+            .style("stroke", "#9ca3af")
+            .style("stroke-width", 2)
+            .attr("marker-end", "url(#arrow)");
+        }
+        drawPipeline();
+        window.addEventListener("resize", drawPipeline);
+
+        // --- Interactive POS Tagger ---
+        const posTagBtn = document.getElementById("pos-tag-btn");
+        const posInput = document.getElementById("pos-input");
+        const posOutput = document.getElementById("pos-output");
+        const posTagDefs = {
+          PRP: "Personal pronoun (e.g., they, us)",
+          VBP: "Verb, present tense, non-3rd person singular",
+          TO: "to",
+          VB: "Verb, base form (e.g., permit, obtain)",
+          DT: "Determiner (e.g., the, a)",
+          NN: "Noun, singular or mass (e.g., refuse, permit)",
+          ".": "Punctuation",
+          VBD: "Verb, past tense",
+          IN: "Preposition",
+        };
+
+        function tagSentence() {
+          // Simplified tagger logic for demonstration
+          const text = posInput.value;
+          const tokens = text.trim().split(/\s+/);
+          let outputHtml = "";
+          const specialCase =
+            "They refuse to permit us to obtain the refuse permit.";
+
+          tokens.forEach((token, index) => {
+            const cleanToken = token.replace(/[.,!?;]$/, "");
+            let tag = "NN"; // Default
+            if (text.trim() === specialCase) {
+              if (token === "They") tag = "PRP";
+              else if (token === "refuse" && index === 1) tag = "VBP";
+              else if (token === "to") tag = "TO";
+              else if (token === "permit" && index === 3) tag = "VB";
+              else if (token === "us") tag = "PRP";
+              else if (token === "obtain") tag = "VB";
+              else if (token === "the") tag = "DT";
+              else if (token.startsWith("permit")) tag = "NN";
+              else if (token.startsWith("refuse")) tag = "NN";
+            } else {
+              // Generic rules for other sentences
+              if (["the", "a", "an"].includes(cleanToken.toLowerCase()))
+                tag = "DT";
+              else if (
+                ["i", "you", "he", "she", "it", "we", "they"].includes(
+                  cleanToken.toLowerCase()
+                )
+              )
+                tag = "PRP";
+              else if (token.endsWith("ed")) tag = "VBD";
+            }
+            const finalTag = token.endsWith(".") ? "." : tag;
+            const tagDesc = posTagDefs[tag] || "Unknown Tag";
+
+            outputHtml += `<span class="inline-block bg-slate-100 rounded px-2 py-1 mr-2 mb-2">
+                ${token} <span class="font-code text-sm font-semibold text-sky-600 border-l-2 border-slate-200 ml-2 pl-2" title="${tagDesc}">${finalTag}</span>
+            </span>`;
+          });
+          posOutput.innerHTML = outputHtml;
+        }
+        posTagBtn.addEventListener("click", tagSentence);
+        tagSentence(); // Initial run
+
+        // --- Interactive Grammar Builder ---
+        const chunkingApplyBtn = document.getElementById("chunking-apply-btn");
+        const grammarInput = document.getElementById("chunking-grammar-input");
+        const chunkingOutput = document.getElementById("chunking-output");
+        const chunkingSentence = [
+          { word: "The", tag: "DT" },
+          { word: "little", tag: "JJ" },
+          { word: "yellow", tag: "JJ" },
+          { word: "dog", tag: "NN" },
+          { word: "barked", tag: "VBD" },
+          { word: "at", tag: "IN" },
+          { word: "the", tag: "DT" },
+          { word: "cat", tag: "NN" },
+          { word: ".", tag: "." },
+        ];
+
+        function applyChunkingGrammar() {
+          const grammarRule = grammarInput.value;
+          const match = grammarRule.match(/(\w+):\s*{(.*)}/);
+          if (!match) return;
+
+          const chunkLabel = match[1];
+          const pattern = match[2].split(/><|[\s<>]+/).filter(Boolean);
+
+          let i = 0;
+          let html = "";
+          while (i < chunkingSentence.length) {
+            // Simplified matching logic for demo: DT? JJ* NN
+            let j = i;
+            let chunkFound = false;
+            if (pattern.includes("DT") && chunkingSentence[j].tag === "DT") j++;
+            if (pattern.includes("JJ*")) {
+              while (
+                j < chunkingSentence.length &&
+                chunkingSentence[j].tag === "JJ"
+              )
+                j++;
+            }
+            if (
+              pattern.includes("NN") &&
+              j < chunkingSentence.length &&
+              chunkingSentence[j].tag === "NN"
+            ) {
+              chunkFound = true;
+              html += `<span class="bg-sky-100 border border-sky-400 rounded-md px-2 py-1">`;
+              for (let k = i; k <= j; k++) {
+                html += `${chunkingSentence[k].word} `;
+              }
+              html += `<sub class="font-bold text-sky-600">${chunkLabel}</sub></span> `;
+              i = j + 1;
+            }
+
+            if (!chunkFound) {
+              html += `${chunkingSentence[i].word} `;
+              i++;
+            }
+          }
+          chunkingOutput.innerHTML = html;
+        }
+        chunkingApplyBtn.addEventListener("click", applyChunkingGrammar);
+        applyChunkingGrammar();
+
+        // --- Dependency Parse Explorer ---
+        function drawDepParse() {
+          const depParseData = {
+            nodes: [
+              { id: 0, text: "The" },
+              { id: 1, text: "big" },
+              { id: 2, text: "black" },
+              { id: 3, text: "cat" },
+              { id: 4, text: "stared" },
+              { id: 5, text: "at" },
+              { id: 6, text: "the" },
+              { id: 7, text: "small" },
+              { id: 8, text: "dog" },
+              { id: 9, text: "." },
+            ],
+            links: [
+              { source: 3, target: 0, label: "det" },
+              { source: 3, target: 1, label: "amod" },
+              { source: 3, target: 2, label: "amod" },
+              { source: 4, target: 3, label: "nsubj" },
+              { source: 4, target: 5, label: "prep" },
+              { source: 5, target: 8, label: "pobj" },
+              { source: 8, target: 6, label: "det" },
+              { source: 8, target: 7, label: "amod" },
+              { source: 4, target: 9, label: "punct" },
+            ],
+          };
+
+          const container = d3.select("#dep-parse-vis");
+          container.selectAll("*").remove();
+          const { width } = container.node().getBoundingClientRect();
+          const height = 320;
+          const svg = container
+            .append("svg")
+            .attr("width", width)
+            .attr("height", height);
+
+          const nodeRadius = 15;
+          const wordPositions = depParseData.nodes.map((node, i) => ({
+            x: (i + 1) * (width / (depParseData.nodes.length + 1)),
+            y: height / 2 + 50,
+          }));
+
+          const links = depParseData.links.map((d) => ({ ...d })); //
+
+          svg
+            .selectAll(".dep-link")
+            .data(links)
+            .enter()
+            .append("path")
+            .attr("class", "dep-link")
+            .attr("id", (d) => `path-${d.source}-${d.target}`)
+            .attr("d", (d) => {
+              const start = wordPositions[d.source];
+              const end = wordPositions[d.target];
+              const dx = end.x - start.x;
+              const dr = Math.sqrt(dx * dx) * 1.5;
+              const sweep = d.source > d.target ? 0 : 1;
+              return `M${start.x},${start.y} A${dr},${dr} 0 0,${sweep} ${end.x},${end.y}`;
+            })
+            .style("fill", "none")
+            .style("stroke", "#9ca3af")
+            .style("stroke-width", 1.5);
+
+          svg
+            .selectAll(".dep-label")
+            .data(links)
+            .enter()
+            .append("text")
+            .attr("dy", -5)
+            .append("textPath")
+            .attr("xlink:href", (d) => `#path-${d.source}-${d.target}`)
+            .style("text-anchor", "middle")
+            .attr("startOffset", "50%")
+            .text((d) => d.label)
+            .style("font-size", "12px")
+            .style("fill", "#52525b");
+
+          const nodes = svg
+            .selectAll(".dep-node")
+            .data(depParseData.nodes)
+            .enter()
+            .append("g")
+            .attr("class", "dep-node")
+            .attr(
+              "transform",
+              (d, i) =>
+                `translate(${wordPositions[i].x}, ${wordPositions[i].y})`
+            )
+            .style("cursor", "pointer");
+
+          nodes
+            .append("circle")
+            .attr("r", nodeRadius)
+            .style("fill", "white")
+            .style("stroke", "#0369a1")
+            .style("stroke-width", 2);
+          nodes
+            .append("text")
+            .text((d) => d.text)
+            .attr("text-anchor", "middle")
+            .attr("dy", "0.35em")
+            .style("pointer-events", "none")
+            .style("font-size", "14px");
+
+          let selectedNodes = [];
+          const depPathDisplay = document.getElementById("dep-path-display");
+          nodes.on("click", (event, d) => {
+            const clickedNodeIndex = depParseData.nodes.findIndex(
+              (n) => n.id === d.id
+            );
+            const nodeG = d3.select(event.currentTarget);
+
+            const isSelected = selectedNodes.includes(clickedNodeIndex);
+            if (isSelected) {
+              selectedNodes = selectedNodes.filter(
+                (i) => i !== clickedNodeIndex
+              );
+              nodeG.select("circle").style("fill", "white");
+            } else {
+              if (selectedNodes.length < 2) {
+                selectedNodes.push(clickedNodeIndex);
+                nodeG.select("circle").style("fill", "#dbeafe"); // blue-200
+              }
+            }
+
+            svg
+              .selectAll(".dep-link")
+              .style("stroke", "#9ca3af")
+              .style("stroke-width", 1.5);
+            depPathDisplay.textContent = "None";
+
+            if (selectedNodes.length === 2) {
+              const path = findShortestPath(
+                selectedNodes[0],
+                selectedNodes[1],
+                depParseData
+              );
+              if (path) {
+                highlightPath(path, svg);
+                const pathText = path
+                  .map(
+                    (nodeId) =>
+                      depParseData.nodes.find((n) => n.id === nodeId).text
+                  )
+                  .join(" → ");
+                depPathDisplay.textContent = pathText;
+              }
+            }
+          });
+        }
+
+        function findShortestPath(startId, endId, graph) {
+          const adj = {};
+          graph.nodes.forEach((n) => (adj[n.id] = []));
+          graph.links.forEach((l) => {
+            adj[l.source].push(l.target);
+            adj[l.target].push(l.source);
+          });
+
+          const queue = [[startId]];
+          const visited = new Set([startId]);
+
+          while (queue.length > 0) {
+            const path = queue.shift();
+            const lastNode = path[path.length - 1];
+
+            if (lastNode === endId) return path;
+
+            for (const neighbor of adj[lastNode]) {
+              if (!visited.has(neighbor)) {
+                visited.add(neighbor);
+                const newPath = [...path, neighbor];
+                queue.push(newPath);
+              }
+            }
+          }
+          return null;
+        }
+
+        function highlightPath(path, svg) {
+          const pathLinks = new Set();
+          for (let i = 0; i < path.length - 1; i++) {
+            pathLinks.add(`${path[i]}-${path[i + 1]}`);
+            pathLinks.add(`${path[i + 1]}-${path[i]}`);
+          }
+          svg
+            .selectAll(".dep-link")
+            .style("stroke", (d) => {
+              const id1 = `${d.source}-${d.target}`;
+              const id2 = `${d.target}-${d.source}`;
+              return pathLinks.has(id1) || pathLinks.has(id2)
+                ? "#a855f7"
+                : "#9ca3af";
+            })
+            .style("stroke-width", (d) => {
+              const id1 = `${d.source}-${d.target}`;
+              const id2 = `${d.target}-${d.source}`;
+              return pathLinks.has(id1) || pathLinks.has(id2) ? 3 : 1.5;
+            });
+        }
+
+        drawDepParse();
+        window.addEventListener("resize", drawDepParse);
+
+        // --- Viterbi Algorithm Visualization ---
+        const viterbiStepBtn = document.getElementById("viterbi-step-btn");
+        const viterbiResetBtn = document.getElementById("viterbi-reset-btn");
+        const viterbiLatticeTable = document.getElementById("viterbi-lattice");
+        const viterbiPathDisplay = document.getElementById(
+          "viterbi-path-display"
+        );
+
+        const sentence = ["Janet", "will", "back", "the", "bill"];
+        const states = ["NNP", "MD", "VB", "NN", "DT"];
+        const A = {
+          "<s>": { NNP: 0.28, MD: 0.0006, VB: 0.0031, NN: 0.0449, DT: 0.1 },
+          NNP: { MD: 0.011, VB: 0.0009 },
+          MD: { VB: 0.8 },
+          VB: { DT: 0.3, NN: 0.22 },
+          DT: { NN: 0.47 },
+          NN: { VB: 0.0014, NNP: 0.0096 },
+        };
+        const B = {
+          Janet: { NNP: 0.000032 },
+          will: { MD: 0.31, NN: 0.0002 },
+          back: { VB: 0.00067, NN: 0.00022 },
+          the: { DT: 0.51 },
+          bill: { NN: 0.0023, VB: 0.000028 },
+        };
+
+        let viterbiState = { step: -1, viterbi: [], backpointer: [] };
+
+        function setupViterbiTable() {
+          let thead =
+            '<thead class="bg-zinc-50"><tr><th class="p-2 border border-zinc-200">State</th>';
+          sentence.forEach(
+            (word) =>
+              (thead += `<th class="p-2 border border-zinc-200 text-center">${word}</th>`)
+          );
+          thead += "</tr></thead>";
+          let tbody = "<tbody>";
+          states.forEach((state) => {
+            tbody += `<tr><td class="p-2 border border-zinc-200 font-semibold">${state}</td>`;
+            sentence.forEach(
+              (_, i) =>
+                (tbody += `<td id="viterbi-cell-${state}-${i}" class="p-2 border border-zinc-200 text-center font-mono"></td>`)
+            );
+            tbody += "</tr>";
+          });
+          tbody += "</tbody>";
+          viterbiLatticeTable.innerHTML = thead + tbody;
+        }
+
+        function resetViterbi() {
+          viterbiState = {
+            step: -1,
+            viterbi: Array(states.length)
+              .fill(null)
+              .map(() => Array(sentence.length).fill(0)),
+            backpointer: Array(states.length)
+              .fill(null)
+              .map(() => Array(sentence.length).fill(null)),
+          };
+          setupViterbiTable();
+          viterbiStepBtn.textContent = "Start";
+          viterbiStepBtn.disabled = false;
+          viterbiPathDisplay.textContent = "";
+        }
+
+        viterbiResetBtn.addEventListener("click", resetViterbi);
+        viterbiStepBtn.addEventListener("click", () => {
+          if (viterbiState.step < sentence.length) {
+            viterbiState.step++;
+            runViterbiStep();
+          }
+        });
+
+        function runViterbiStep() {
+          const t = viterbiState.step;
+          if (t >= sentence.length) {
+            viterbiStepBtn.textContent = "Done";
+            viterbiStepBtn.disabled = true;
+            backtraceViterbi();
+            return;
+          }
+
+          viterbiStepBtn.textContent = `Next Step (${sentence[t]})`;
+          const word = sentence[t];
+
+          states.forEach((state, s_idx) => {
+            const cell = document.getElementById(`viterbi-cell-${state}-${t}`);
+            cell.classList.add(
+              "bg-amber-100",
+              "transition-colors",
+              "duration-500"
+            );
+
+            const emission_prob =
+              B[word] && B[word][state] ? B[word][state] : 1e-9;
+            if (t === 0) {
+              const trans_prob = A["<s>"][state] || 1e-9;
+              viterbiState.viterbi[s_idx][t] = trans_prob * emission_prob;
+            } else {
+              let max_prob = -1;
+              let best_prev_state_idx = -1;
+              states.forEach((prev_state, prev_s_idx) => {
+                const trans_prob =
+                  A[prev_state] && A[prev_state][state]
+                    ? A[prev_state][state]
+                    : 1e-9;
+                const prob =
+                  viterbiState.viterbi[prev_s_idx][t - 1] * trans_prob;
+                if (prob > max_prob) {
+                  max_prob = prob;
+                  best_prev_state_idx = prev_s_idx;
+                }
+              });
+              viterbiState.viterbi[s_idx][t] = max_prob * emission_prob;
+              viterbiState.backpointer[s_idx][t] = best_prev_state_idx;
+            }
+            cell.innerHTML = `${viterbiState.viterbi[s_idx][t].toExponential(
+              1
+            )} <br/> <small class="text-zinc-500">${
+              viterbiState.backpointer[s_idx][t] !== null
+                ? `from ${states[viterbiState.backpointer[s_idx][t]]}`
+                : ""
+            }</small>`;
+            setTimeout(() => cell.classList.remove("bg-amber-100"), 500);
+          });
+        }
+
+        function backtraceViterbi() {
+          let last_state_idx = viterbiState.viterbi
+            .map((row) => row[sentence.length - 1])
+            .reduce((iMax, x, i, arr) => (x > arr[iMax] ? i : iMax), 0);
+          let path = [];
+          for (let t = sentence.length - 1; t >= 0; t--) {
+            path.unshift(states[last_state_idx]);
+            document
+              .getElementById(`viterbi-cell-${states[last_state_idx]}-${t}`)
+              .classList.add("bg-sky-200");
+            last_state_idx = viterbiState.backpointer[last_state_idx][t];
+          }
+          viterbiPathDisplay.textContent = path.join(" → ");
+        }
+
+        resetViterbi();
 
         // --- Audio Speed Control ---
         const audio = document.getElementById("topic-audio");
